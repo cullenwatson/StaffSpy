@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "staffspy"
+version = "0.1.0"
+description = "Company staff scraper library for LinkedIn"
+authors = ["Cullen Watson <cullen@bunsly.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+
+[tool.poetry.group.dev.dependencies]
+pre-commit = "^3.7.1"
+black = "^24.4.2"
+jupyter = "^1.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
