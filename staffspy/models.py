@@ -2,6 +2,7 @@ from pydantic import BaseModel
 
 
 class Staff(BaseModel):
+    search_term: str
     id: str
     name: str
     position: str | None = None
@@ -26,6 +27,7 @@ class Staff(BaseModel):
 
     def to_dict(self):
         return {
+            "search_term": self.search_term,
             "id": self.id,
             "profile_id": self.profile_id,
             "name": self.name,

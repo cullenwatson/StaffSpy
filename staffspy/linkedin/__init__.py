@@ -16,13 +16,15 @@ class LinkedInScraper:
         self.session = utils.load_session(session_file)
 
         self.company_id = self.staff_count = None
+        self.company_name = None
 
     def get_company_id(self, company_name):
-        response = self.session.get(f"{self.company_id_ep}{company_name}")
+        res = self.session.get(f"{self.company_id_ep}{company_name}")
+        print("Fetched company", res.status_code)
         try:
-            response_json = response.json()
+            response_json = res.json()
         except json.decoder.JSONDecodeError:
-            print(response.text[:200])
+            print(res.text[:200])
             sys.exit()
         company = response_json["elements"][0]
         staff_count = company["staffCount"]
@@ -47,7 +49,14 @@ class LinkedInScraper:
                     if person.get("primarySubtitle")
                     else ""
                 )
-                staff += (Staff(id=linkedin_id, name=name, position=position),)
+                staff.append(
+                    Staff(
+                        id=linkedin_id,
+                        name=name,
+                        position=position,
+                        search_term=self.company_name,
+                    )
+                )
         return staff
 
     def parse_emp(self, emp, emp_dict):
@@ -61,28 +70,41 @@ class LinkedInScraper:
         except:
             profile_photo = None
 
-        emp.profile_id = (emp_dict["publicIdentifier"],)
-        emp.profile_link = (
-            f'https://www.linkedin.com/in/{emp_dict["publicIdentifier"]}',
-        )
-        emp.profile_photo = (profile_photo,)
-        emp.first_name = (emp_dict["firstName"],)
-        emp.last_name = (emp_dict["lastName"],)
-        emp.followers = (emp_dict["followingState"]["followerCount"],)
-        emp.connections = (emp_dict["connections"]["paging"]["total"],)
-        emp.location = (emp_dict["geoLocation"]["geo"]["defaultLocalizedName"],)
-        emp.company = (emp_dict["profileTopPosition"]["elements"][0]["companyName"],)
-        emp.school = (emp_dict["profileTopEducation"]["elements"][0]["school"]["name"],)
-        emp.influencer = (emp_dict["influencer"],)
-        emp.creator = (emp_dict["creator"],)
-        emp.premium = (emp_dict["premium"],)
-        emp.public_profile = (emp_dict["privacySettings"]["showPublicProfile"],)
-        emp.open_profile = (emp_dict["privacySettings"]["allowOpenProfile"],)
-        emp.profile_viewer = (emp_dict["privacySettings"]["discloseAsProfileViewer"],)
+        emp.profile_id = emp_dict["publicIdentifier"]
+        print("Fetched employee", emp.profile_id)
+
+        try:
+            emp.profile_link = (
+                f'https://www.linkedin.com/in/{emp_dict["publicIdentifier"]}',
+            )
+            emp.profile_photo = profile_photo
+            emp.first_name = emp_dict["firstName"]
+            emp.last_name = emp_dict["lastName"]
+            emp.followers = emp_dict["followingState"]["followerCount"]
+            emp.connections = emp_dict["connections"]["paging"]["total"]
+            emp.location = emp_dict["geoLocation"]["geo"]["defaultLocalizedName"]
+            emp.company = emp_dict["profileTopPosition"]["elements"][0]["companyName"]
+            edu_cards = emp_dict["profileTopEducation"]["elements"]
+            if edu_cards:
+                try:
+                    emp.school = edu_cards[0].get(
+                        "schoolName", edu_cards[0].get("school", {}).get("name")
+                    )
+                except Exception as e:
+                    pass
+            emp.influencer = emp_dict["influencer"]
+            emp.creator = emp_dict["creator"]
+            emp.premium = emp_dict["premium"]
+            emp.public_profile = emp_dict["privacySettings"]["showPublicProfile"]
+            emp.open_profile = emp_dict["privacySettings"]["allowOpenProfile"]
+            emp.profile_viewer = emp_dict["privacySettings"]["discloseAsProfileViewer"]
+        except Exception as e:
+            pass
 
     def fetch_employee(self, base_staff):
         ep = self.employee_ep.format(employee_id=base_staff.id)
         res = self.session.get(ep)
+        print("Fetched employee", base_staff.id, res.status_code)
         if not res.ok:
             print(res.text[:200])
             return False
@@ -144,6 +166,7 @@ class LinkedInScraper:
         return self.parse_staff(elements) if elements else []
 
     def scrape_staff(self, company_name, profile_details, skills, max_results):
+        self.company_name = company_name
         company_id, staff_count = self.get_company_id(company_name)
         staff_list: list[Staff] = []
         for offset in range(0, min(staff_count, max_results), 50):
@@ -151,6 +174,7 @@ class LinkedInScraper:
             if not staff:
                 break
             staff_list += staff
+        print(f"Found {len(staff_list)} staff")
         reduced_staff_list = staff_list[:max_results]
 
         non_restricted = list(
