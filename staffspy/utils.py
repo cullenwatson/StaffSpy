@@ -1,6 +1,7 @@
 import os
 import pickle
 import sys
+from datetime import datetime
 
 import requests
 from selenium import webdriver
@@ -71,3 +72,17 @@ def load_session(session_file):
             session.cookies.update(data["cookies"])
             session.headers.update(data["headers"])
     return session
+
+
+def parse_duration(duration):
+    from_date = to_date = None
+    dates = duration.split(" · ")
+    if len(dates) > 1:
+        date_range, _ = duration.split(" · ")
+        dates = date_range.split(" - ")
+        from_date_str = dates[0]
+        to_date_str = dates[1] if dates[1] != "Present" else None
+        from_date = datetime.strptime(from_date_str, "%b %Y") if from_date_str else None
+        to_date = datetime.strptime(to_date_str, "%b %Y") if to_date_str else None
+
+    return from_date, to_date

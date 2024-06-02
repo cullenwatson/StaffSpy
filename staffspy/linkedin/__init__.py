@@ -2,20 +2,17 @@ import json
 import re
 import sys
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime
-
-import pytz
-
 import utils
-from models import Staff
+from models import Staff, Experience, Certification, Skill
 
 
 class LinkedInScraper:
     company_id_ep = "https://www.linkedin.com/voyager/api/organization/companies?q=universalName&universalName="
-    employees_ep = "https://www.linkedin.com/voyager/api/graphql?variables=(start:{offset},query:(flagshipSearchIntent:SEARCH_SRP,queryParameters:List((key:currentCompany,value:List({company_id})),(key:resultType,value:List(PEOPLE))),includeFiltersInResponse:false),count:{count})&queryId=voyagerSearchDashClusters.66adc6056cf4138949ca5dcb31bb1749"  # 50 max
+    employees_ep = "https://www.linkedin.com/voyager/api/graphql?variables=(start:{offset},query:(flagshipSearchIntent:SEARCH_SRP,queryParameters:List((key:currentCompany,value:List({company_id})),(key:resultType,value:List(PEOPLE))),includeFiltersInResponse:false),count:{count})&queryId=voyagerSearchDashClusters.66adc6056cf4138949ca5dcb31bb1749"
     employee_ep = "https://www.linkedin.com/voyager/api/voyagerIdentityDashProfiles?count=1&decorationId=com.linkedin.voyager.dash.deco.identity.profile.TopCardComplete-138&memberIdentity={employee_id}&q=memberIdentity"
     skills_ep = "https://www.linkedin.com/voyager/api/graphql?queryId=voyagerIdentityDashProfileComponents.277ba7d7b9afffb04683953cede751fb&queryName=ProfileComponentsBySectionType&variables=(tabIndex:0,sectionType:skills,profileUrn:urn%3Ali%3Afsd_profile%3A{employee_id},count:50)"
-    active_ep = "https://www.linkedin.com/voyager/api/graphql?queryId=voyagerMessagingDashPresenceStatuses.5284f69d7b00fbb5414d4b024737ab89&queryName=GetMessagingPresenceStatusesByIds&variables=(profileUrns:List(urn%3Ali%3Afsd_profile%3A{employee_id}))"
+    experience_ep = "https://www.linkedin.com/voyager/api/graphql?queryId=voyagerIdentityDashProfileComponents.277ba7d7b9afffb04683953cede751fb&queryName=ProfileComponentsBySectionType&variables=(tabIndex:0,sectionType:experience,profileUrn:urn%3Ali%3Afsd_profile%3A{employee_id},count:50)"
+    certifications_ep = "https://www.linkedin.com/voyager/api/graphql?queryId=voyagerIdentityDashProfileComponents.277ba7d7b9afffb04683953cede751fb&queryName=ProfileComponentsBySectionType&variables=(tabIndex:0,sectionType:certifications,profileUrn:urn%3Ali%3Afsd_profile%3A{employee_id},count:50)"
 
     def __init__(self, session_file):
         self.session = utils.load_session(session_file)
@@ -135,6 +132,7 @@ class LinkedInScraper:
 
     def fetch_skills(self, staff):
         ep = self.skills_ep.format(employee_id=staff.id)
+        print("Fetched employee skills", staff.profile_id)
         res = self.session.get(ep)
         if not res.ok:
             print(res.text[:200])
@@ -155,6 +153,92 @@ class LinkedInScraper:
 
         staff.skills = self.parse_skills(skills_json)
         return True
+
+    def fetch_experiences(self, staff):
+        ep = self.experience_ep.format(employee_id=staff.id)
+        print("Fetched employee exps", staff.profile_id)
+        res = self.session.get(ep)
+        if not res.ok:
+            print(res.text[:200])
+            return False
+        try:
+            res_json = res.json()
+        except json.decoder.JSONDecodeError:
+            print(res.text[:200])
+            return False
+
+        try:
+            skills_json = res_json["data"][
+                "identityDashProfileComponentsBySectionType"
+            ]["elements"][0]["components"]["pagedListComponent"]["components"][
+                "elements"
+            ]
+        except (KeyError, IndexError, TypeError) as e:
+            print(res_json)
+            return False
+
+        staff.experiences = self.parse_experiences(skills_json)
+        return True
+
+    def fetch_certifications(self, staff):
+        ep = self.certifications_ep.format(employee_id=staff.id)
+        print("Fetched employee certs", staff.profile_id)
+        res = self.session.get(ep)
+        if not res.ok:
+            print(res.text[:200])
+            return False
+        try:
+            res_json = res.json()
+        except json.decoder.JSONDecodeError:
+            print(res.text[:200])
+            return False
+
+        try:
+            certs_json = res_json["data"]["identityDashProfileComponentsBySectionType"][
+                "elements"
+            ][0]["components"]["pagedListComponent"]["components"]["elements"]
+        except (KeyError, IndexError, TypeError) as e:
+            print(res_json)
+            return False
+
+        staff.certifications = self.parse_certifications(certs_json)
+        return True
+
+    def parse_certifications(self, sections):
+        certs = []
+        for section in sections:
+            elem = section["components"]["entityComponent"]
+            if not elem:
+                break
+            title = elem["titleV2"]["text"]["text"]
+            issuer = elem["subtitle"]["text"]
+            date_issued = (
+                elem["caption"]["text"].replace("Issued ", "")
+                if elem["caption"]
+                else None
+            )
+            cert_id = (
+                elem["metadata"]["text"].replace("Credential ID ", "")
+                if elem["metadata"]
+                else None
+            )
+            try:
+                subcomp = elem["subComponents"]["components"][0]
+                cert_link = subcomp["components"]["actionComponent"]["action"][
+                    "navigationAction"
+                ]["actionTarget"]
+            except:
+                cert_link = None
+            cert = Certification(
+                title=title,
+                issuer=issuer,
+                date_issued=date_issued,
+                cert_link=cert_link,
+                cert_id=cert_id,
+            )
+            certs.append(cert)
+
+        return certs
 
     def fetch_staff(self, offset, company_id):
         ep = self.employees_ep.format(
@@ -178,7 +262,14 @@ class LinkedInScraper:
         return self.parse_staff(elements) if elements else []
 
     def scrape_staff(
-        self, company_name, profile_details, skills, max_results, num_threads
+        self,
+        company_name,
+        profile_details,
+        skills,
+        experiences,
+        certifications,
+        max_results,
+        num_threads,
     ):
         self.company_name = company_name
         self.max_results = max_results
@@ -203,7 +294,86 @@ class LinkedInScraper:
             with ThreadPoolExecutor(max_workers=num_threads) as executor:
                 list(executor.map(self.fetch_skills, non_restricted))
 
+        if experiences:
+            with ThreadPoolExecutor(max_workers=num_threads) as executor:
+                list(executor.map(self.fetch_experiences, non_restricted))
+
+        if certifications:
+            with ThreadPoolExecutor(max_workers=num_threads) as executor:
+                list(executor.map(self.fetch_certifications, non_restricted))
+
         return reduced_staff_list
+
+    def parse_multi_exp(self, entity):
+        exps = []
+        company = entity["titleV2"]["text"]["text"]
+        elements = entity["subComponents"]["components"][0]["components"][
+            "pagedListComponent"
+        ]["components"]["elements"]
+        for elem in elements:
+            entity = elem["components"]["entityComponent"]
+            duration = entity["caption"]["text"]
+            title = entity["titleV2"]["text"]["text"]
+            emp_type = (
+                entity["subtitle"]["text"].lower() if entity["subtitle"] else None
+            )
+            location = entity["metadata"]["text"] if entity["metadata"] else None
+            from_date, to_date = utils.parse_duration(duration)
+            if from_date:
+                duration = duration.split(" · ")[1]
+            exp = Experience(
+                duration=duration,
+                title=title,
+                company=company,
+                emp_type=emp_type,
+                from_date=from_date,
+                to_date=to_date,
+                location=location,
+            )
+            exps.append(exp)
+        return exps
+
+    def parse_experiences(self, elements):
+        exps = []
+        for elem in elements:
+            entity = elem["components"]["entityComponent"]
+            try:
+                if entity["caption"]:
+                    emp_type = None
+                    duration = entity["caption"]["text"]
+                    from_date, to_date = utils.parse_duration(duration)
+                    if from_date:
+                        duration = duration.split(" · ")[1]
+                    company = entity["subtitle"]["text"]
+                    title = entity["titleV2"]["text"]["text"]
+                    location = (
+                        entity["metadata"]["text"] if entity["metadata"] else None
+                    )
+                    parts = company.split(" · ")
+                    if len(parts) > 1:
+                        company = parts[0]
+                        emp_type = parts[-1].lower()
+                    exp = Experience(
+                        duration=duration,
+                        title=title,
+                        company=company,
+                        emp_type=emp_type,
+                        from_date=from_date,
+                        to_date=to_date,
+                        location=location,
+                    )
+                    exps.append(exp)
+
+                else:
+                    multi_exps = self.parse_multi_exp(entity)
+                    exps += multi_exps
+
+            except Exception as e:
+                import traceback
+
+                traceback.print_exc()
+                pass
+        return exps
 
     def parse_skills(self, sections):
         skills = []
@@ -212,8 +382,17 @@ class LinkedInScraper:
                 "components"
             ]["elements"]
             for elem in elems:
-                skill = elem["components"]["entityComponent"]["titleV2"]["text"]["text"]
-                skills += (skill,)
+                entity = elem["components"]["entityComponent"]
+                skill = entity["titleV2"]["text"]["text"]
+                try:
+                    endorsements = int(
+                        entity["subComponents"]["components"][0]["components"][
+                            "insightComponent"
+                        ]["text"]["text"]["text"].replace(" endorsements", "")
+                    )
+                except:
+                    endorsements = None
+                skills.append(Skill(name=skill, endorsements=endorsements))
         return skills
 
 

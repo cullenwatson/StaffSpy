@@ -9,6 +9,8 @@ def scrape_staff(
     session_file: str,
     profile_details: bool = False,
     skills: bool = False,
+    experiences: bool = False,
+    certifications: bool = False,
     num_threads: int = 10,
     max_results: int = 10**8,
 ) -> pd.DataFrame:
@@ -19,6 +21,8 @@ def scrape_staff(
         profile_details=profile_details,
         num_threads=num_threads,
         skills=skills,
+        experiences=experiences,
+        certifications=certifications,
         max_results=max_results,
     )
     staff_dicts = [staff.to_dict() for staff in staff]

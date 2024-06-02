@@ -1,4 +1,55 @@
+from datetime import datetime
+
 from pydantic import BaseModel
+
+
+class Skill(BaseModel):
+    name: str | None = None
+    endorsements: int | None = None
+
+    def to_dict(self):
+        return {
+            "name": self.name,
+            "endorsements": self.endorsements,
+        }
+
+
+class Certification(BaseModel):
+    title: str | None = None
+    issuer: str | None = None
+    date_issued: str | None = None
+    cert_id: str | None = None
+    cert_link: str | None = None
+
+    def to_dict(self):
+        return {
+            "title": self.title,
+            "issuer": self.issuer,
+            "date_issued": self.date_issued,
+            "cert_id": self.cert_id,
+            "cert_link": self.cert_link,
+        }
+
+
+class Experience(BaseModel):
+    duration: str | None = None
+    title: str | None = None
+    company: str | None = None
+    location: str | None = None
+    emp_type: str | None = None
+    from_date: datetime | None = None
+    to_date: datetime | None = None
+
+    def to_dict(self):
+        return {
+            "from_date": self.from_date.strftime("%b %Y") if self.from_date else None,
+            "to_date": self.to_date.strftime("%b %Y") if self.to_date else None,
+            "duration": self.duration,
+            "title": self.title,
+            "company": self.company,
+            "location": self.location,
+            "emp_type": self.emp_type,
+        }
 
 
 class Staff(BaseModel):
@@ -20,7 +71,9 @@ class Staff(BaseModel):
     creator: bool | None = None
     premium: bool | None = None
     profile_photo: str | None = None
-    skills: list | None = None
+    skills: list[Skill] | None = None
+    experiences: list[Experience] | None = None
+    certifications: list[Certification] | None = None
 
     def to_dict(self):
         return {
@@ -39,7 +92,19 @@ class Staff(BaseModel):
             "premium": self.premium,
             "creator": self.creator,
             "influencer": self.influencer,
-            "skills": ", ".join(self.skills) if self.skills else None,
             "profile_link": self.profile_link,
             "profile_photo": self.profile_photo,
+            "skills": (
+                [skill.to_dict() for skill in self.skills] if self.skills else None
+            ),
+            "experiences": (
+                [exp.to_dict() for exp in self.experiences]
+                if self.experiences
+                else None
+            ),
+            "certifications": (
+                [cert.to_dict() for cert in self.certifications]
+                if self.certifications
+                else None
+            ),
         }
