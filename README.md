@@ -3,7 +3,7 @@
 ## Features
 
 - Scrapes staff from a company on **LinkedIn**
-- Obtain skills, experiences, certifications & more
+- Obtains skills, experiences, certifications & more
 - Aggregates the employees in a Pandas DataFrame
 
 ### Installation
@@ -21,16 +21,17 @@ _Python version >= [3.10](https://www.python.org/downloads/release/python-3100/)
 from staffspy import scrape_jobs
 
 staff = scrape_staff(
-    company="openai" 
+    company="openai",
+    results_wanted=20,
     
     # optional filters
     # search_term="software engineer",
     # location="Dallas, TX",
-    # results_wanted=20,
+    # num_threads=10
 )
 print(f"Found {len(staff)} staff")
 print(staff.head())
-staff.to_csv("jobs.csv", index=False)
+staff.to_csv("staff.csv", index=False)
 ```
 A browser will open to sign in to LinkedIn. Press enter after signing in to begin scraping. Ctrl-c to stop scraping.
 
@@ -38,11 +39,23 @@ A browser will open to sign in to LinkedIn. Press enter after signing in to begi
 
 ```plaintext
 Staff
+├── id
 ├── name
-├── username
-├── about
-├── skills
+├── position
+├── profile_id
+├── first_name
+├── last_name
+├── company
+├── school
 ├── location
+├── followers
+├── connections
+├── premium
+├── creator
+├── influencer
+├── skills
+├── profile_link
+├── profile_photo
 ├── experiences
 │   ├── position
 │   ├── company
