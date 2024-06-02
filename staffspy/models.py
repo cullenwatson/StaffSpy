@@ -20,32 +20,26 @@ class Staff(BaseModel):
     creator: bool | None = None
     premium: bool | None = None
     profile_photo: str | None = None
-    public_profile: bool | None = None
-    open_profile: bool | None = None
-    profile_viewer: str | None = None
     skills: list | None = None
 
     def to_dict(self):
         return {
             "search_term": self.search_term,
             "id": self.id,
-            "profile_id": self.profile_id,
             "name": self.name,
+            "position": self.position,
+            "profile_id": self.profile_id,
             "first_name": self.first_name,
             "last_name": self.last_name,
-            "position": self.position,
             "company": self.company,
             "school": self.school,
             "location": self.location,
             "followers": self.followers,
             "connections": self.connections,
-            "skills": ", ".join(self.skills) if self.skills else None,
-            "influencer": self.influencer,
-            "creator": self.creator,
             "premium": self.premium,
-            "public_profile": self.public_profile,
-            "open_profile": self.open_profile,
-            "profile_viewer": self.profile_viewer,
+            "creator": self.creator,
+            "influencer": self.influencer,
+            "skills": ", ".join(self.skills) if self.skills else None,
             "profile_link": self.profile_link,
             "profile_photo": self.profile_photo,
         }
