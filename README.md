@@ -1,8 +1,9 @@
-**StaffSpy** is a staff scraper library for LinkedIn companies.
+**StaffSpy** is a staff scraper library for LinkedIn.
 
 ## Features
 
-- Scrapes all staff from a company on **LinkedIn**
+- Scrapes staff from a company on **LinkedIn**
+- Obtain skills, experiences, certifications & more
 - Aggregates the employees in a Pandas DataFrame
 
 ### Installation
@@ -64,7 +65,7 @@ Staff
 ---
 
 **Q: Can I get my account banned?**  
-**A:** It is a possiblity, although there are no recorded incidents. Let me know if you are the first!
+**A:** It is a possiblity, although there are no recorded incidents. Let me know if you are the first.
 
 ---
 
