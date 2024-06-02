@@ -1,8 +1,9 @@
-**StaffSpy** is a staff scraper library for LinkedIn companies.
+**StaffSpy** is a staff scraper library for LinkedIn.
 
 ## Features
 
-- Scrapes all staff from a company on **LinkedIn**
+- Scrapes staff from a company on **LinkedIn**
+- Obtains skills, experiences, certifications & more
 - Aggregates the employees in a Pandas DataFrame
 
 ### Installation
@@ -23,16 +24,17 @@ session_file = Path(__file__).resolve().parent / "session.pkl"
 
 staff = scrape_staff(
     company="openai",
-    session_file=session_file
+    session_file=session_file,
+    results_wanted=20,
     
     # optional filters
     # search_term="software engineer",
     # location="Dallas, TX",
-    # results_wanted=20,
+    # num_threads=10
 )
 print(f"Found {len(staff)} staff")
 print(staff.head())
-staff.to_csv("jobs.csv", index=False)
+staff.to_csv("staff.csv", index=False)
 ```
 A browser will open to sign in to LinkedIn on the first sign-in. Press enter after signing in to begin scraping. Ctrl-c to stop scraping.
 
@@ -62,11 +64,23 @@ A browser will open to sign in to LinkedIn on the first sign-in. Press enter aft
 
 ```plaintext
 Staff
+├── id
 ├── name
-├── username
-├── about
-├── skills
+├── position
+├── profile_id
+├── first_name
+├── last_name
+├── company
+├── school
 ├── location
+├── followers
+├── connections
+├── premium
+├── creator
+├── influencer
+├── skills
+├── profile_link
+├── profile_photo
 ├── experiences
 │   ├── position
 │   ├── company
@@ -89,7 +103,7 @@ Staff
 ---
 
 **Q: Can I get my account banned?**  
-**A:** It is a possiblity, although there are no recorded incidents. Let me know if you are the first!
+**A:** It is a possiblity, although there are no recorded incidents. Let me know if you are the first.
 
 ---
 
