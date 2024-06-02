@@ -64,7 +64,7 @@ Staff
 ---
 
 **Q: Can I get my account banned?**  
-**A:** It is a possiblity, although it has not happened to me. Use at your own risk.
+**A:** It is a possiblity, although there are no recorded incidents. Let me know if you are the first!
 
 ---
 
