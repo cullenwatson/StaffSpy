@@ -4,7 +4,7 @@ import sys
 from urllib.parse import quote
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-import utils
+import staffspy.utils as utils
 from staffspy.utils import logger
 from staffspy.exceptions import TooManyRequests
 from staffspy.models import Staff, Experience, Certification, Skill, School
