@@ -6,6 +6,8 @@
 - Obtains skills, experiences, certifications & more
 - Aggregates the employees in a Pandas DataFrame
 
+[Video Guide for StaffSpy](https://youtu.be/qAqaqwhil7E) - _updated for release v0.1.4_
+
 ### Installation
 
 ```
@@ -13,7 +15,6 @@ pip install -U staffspy
 ```
 
 _Python version >= [3.10](https://www.python.org/downloads/release/python-3100/) required_
-
 
 ### Usage
 
