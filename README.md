@@ -66,23 +66,30 @@ Optional
 ### Staff Schema
 ```plaintext
 Staff
+Staff
 ├── search_term
 ├── id
 ├── name
+|
 ├── position
 ├── profile_id
 ├── profile_link
 ├── first_name
 ├── last_name
+|
 ├── followers
 ├── connections
+|
 ├── location
 ├── company
 ├── school
+|
 ├── influencer
 ├── creator
 ├── premium
+|
 ├── profile_photo
+|
 ├── skills
 │   ├── name
 │   └── endorsements
