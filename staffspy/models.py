@@ -3,6 +3,19 @@ from datetime import datetime
 from pydantic import BaseModel
 
 
+class School(BaseModel):
+    years: str | None = None
+    school: str | None = None
+    degree: str | None = None
+
+    def to_dict(self):
+        return {
+            "years": self.years,
+            "school": self.school,
+            "degree": self.degree,
+        }
+
+
 class Skill(BaseModel):
     name: str | None = None
     endorsements: int | None = None
@@ -74,6 +87,7 @@ class Staff(BaseModel):
     skills: list[Skill] | None = None
     experiences: list[Experience] | None = None
     certifications: list[Certification] | None = None
+    schools: list[School] | None = None
 
     def to_dict(self):
         return {
@@ -93,7 +107,6 @@ class Staff(BaseModel):
             "creator": self.creator,
             "influencer": self.influencer,
             "profile_link": self.profile_link,
-            "profile_photo": self.profile_photo,
             "skills": (
                 [skill.to_dict() for skill in self.skills] if self.skills else None
             ),
@@ -107,4 +120,8 @@ class Staff(BaseModel):
                 if self.certifications
                 else None
             ),
+            "schools": (
+                [school.to_dict() for school in self.schools] if self.schools else None
+            ),
+            "profile_photo": self.profile_photo,
         }

@@ -1,3 +1,4 @@
+import logging
 import os
 import pickle
 import sys
@@ -6,6 +7,17 @@ from datetime import datetime
 import requests
 from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
+
+
+logger = logging.getLogger("StaffSpy")
+logger.propagate = False
+if not logger.handlers:
+    logger.setLevel(logging.INFO)
+    console_handler = logging.StreamHandler()
+    format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    formatter = logging.Formatter(format)
+    console_handler.setFormatter(formatter)
+    logger.addHandler(console_handler)
 
 
 def set_csrf_token(session):
@@ -27,7 +39,7 @@ def login():
     driver = get_webdriver()
 
     if driver is None:
-        print("No browser found for selenium")
+        logger.debug("No browser found for selenium")
         sys.exit(1)
 
     driver.get("https://linkedin.com/login")
@@ -60,11 +72,12 @@ def save_session(session, session_file):
 
 
 def load_session(session_file):
-    if not os.path.exists(session_file):
+    if not session_file or not os.path.exists(session_file):
         session = login()
         if not session:
             sys.exit("Failed to log in.")
-        save_session(session, session_file)
+        if session_file:
+            save_session(session, session_file)
     else:
         with open(session_file, "rb") as f:
             data = pickle.load(f)
@@ -72,6 +85,16 @@ def load_session(session_file):
             session.cookies.update(data["cookies"])
             session.headers.update(data["headers"])
     return session
+
+
+def parse_date(date_str):
+    formats = ["%b %Y", "%Y"]
+    for fmt in formats:
+        try:
+            return datetime.strptime(date_str, fmt)
+        except ValueError:
+            continue
+    return None
 
 
 def parse_duration(duration):
@@ -82,7 +105,24 @@ def parse_duration(duration):
         dates = date_range.split(" - ")
         from_date_str = dates[0]
         to_date_str = dates[1] if dates[1] != "Present" else None
-        from_date = datetime.strptime(from_date_str, "%b %Y") if from_date_str else None
-        to_date = datetime.strptime(to_date_str, "%b %Y") if to_date_str else None
+        from_date = parse_date(from_date_str) if from_date_str else None
+        to_date = parse_date(to_date_str) if to_date_str else None
 
     return from_date, to_date
+
+
+def set_logger_level(verbose: int = 0):
+    """
+    Adjusts the logger's level. This function allows the logging level to be changed at runtime.
+
+    Parameters:
+    - verbose: int {0, 1, 2} (default=0, no logs)
+    """
+    if verbose is None:
+        return
+    level_name = {2: "DEBUG", 1: "INFO", 0: "WARNING"}.get(verbose, "INFO")
+    level = getattr(logging, level_name.upper(), None)
+    if level is not None:
+        logger.setLevel(level)
+    else:
+        raise ValueError(f"Invalid log level: {level_name}")

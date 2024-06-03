@@ -23,20 +23,18 @@ from pathlib import Path
 session_file = Path(__file__).resolve().parent / "session.pkl"
 
 staff = scrape_staff(
-    company="openai",
-    session_file=session_file,
-    results_wanted=20,
-    
-    # optional filters
-    # search_term="software engineer",
-    # location="Dallas, TX",
-    # num_threads=10
+    company_name="openai",
+    search_term="software engineer",
+    extra_profile_data=True,
+
+    max_results=50,
+    session_file=str(session_file),
+    log_level=1,
 )
-print(f"Found {len(staff)} staff")
-print(staff.head())
-staff.to_csv("staff.csv", index=False)
+filename = f"staff.csv"
+staff.to_csv(filename, index=False)
 ```
-A browser will open to sign in to LinkedIn on the first sign-in. Press enter after signing in to begin scraping. Ctrl-c to stop scraping.
+A browser will open to sign in to LinkedIn on the first sign-in. Press enter after signing in to begin scraping.
 
 ### Parameters for `scrape_staff()`
 
@@ -44,57 +42,69 @@ A browser will open to sign in to LinkedIn on the first sign-in. Press enter aft
 ├── company_name (str): 
 |    company identifier on linkedin 
 |    e.g. openai from https://www.linkedin.com/company/openai
+
+Optional 
+├── search_term (str): 
+|    employee title to search for
+|    e.g. software engineer
 │
-├── profile_details (bool)
-|    fetches most recent company, school,
-|    locations, # of connections/followers, bio, profile link, pfp
-│
-├── num_threads (int)
-|    speed of the scraping, default 10
+├── extra_profile_data (bool)
+|    fetches educations, experiences, skills, certifications (Default false)
 │
 ├── max_results (int): 
-|    number of employees to fetch, max is 1000 imposed by linkedin
+|    number of employees to fetch, default/max is 1000 for a search imposed by LinkedIn
 │
 ├── session_file (str): 
-|    file path to save session cookies, so only one login is needed.
+|    file path to save session cookies, so only one manual login is needed.
 |    can use mult profiles this way
+│
+├── log_level (int): 
+|    Controls the verbosity of the runtime printouts 
+|    (0 prints only errors, 1 is info, 2 is all logs. Default is 0.)
 │
 
 ### Staff Schema
 
 ```plaintext
 Staff
+├── search_term
 ├── id
 ├── name
 ├── position
 ├── profile_id
+├── profile_link
 ├── first_name
 ├── last_name
-├── company
-├── school
-├── location
 ├── followers
 ├── connections
-├── premium
-├── creator
+├── location
+├── company
+├── school
 ├── influencer
-├── skills
-├── profile_link
+├── creator
+├── premium
 ├── profile_photo
+├── skills
+│   ├── name
+│   └── endorsements
 ├── experiences
-│   ├── position
+│   ├── from_date
+│   ├── to_date
+│   ├── duration
+│   ├── title
 │   ├── company
 │   ├── location
-│   ├── duration
-│   ├── from_date
-│   └── to_date
-├── educations
-    ├── school_name
-    ├── degree
-    ├── location
-    ├── duration
-    ├── from_date
-    └── to_date
+│   └── emp_type
+├── certifications
+│   ├── title
+│   ├── issuer
+│   ├── date_issued
+│   ├── cert_id
+│   └── cert_link
+└── schools
+    ├── years
+    ├── school
+    └── degree
 ```
 
 

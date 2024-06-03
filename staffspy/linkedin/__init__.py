@@ -1,25 +1,29 @@
 import json
 import re
 import sys
-from concurrent.futures import ThreadPoolExecutor
+from urllib.parse import quote
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
 import utils
-from models import Staff, Experience, Certification, Skill
+from staffspy.utils import logger
+from staffspy.exceptions import TooManyRequests
+from staffspy.models import Staff, Experience, Certification, Skill, School
 
 
 class LinkedInScraper:
     company_id_ep = "https://www.linkedin.com/voyager/api/organization/companies?q=universalName&universalName="
-    employees_ep = "https://www.linkedin.com/voyager/api/graphql?variables=(start:{offset},query:(flagshipSearchIntent:SEARCH_SRP,queryParameters:List((key:currentCompany,value:List({company_id})),(key:resultType,value:List(PEOPLE))),includeFiltersInResponse:false),count:{count})&queryId=voyagerSearchDashClusters.66adc6056cf4138949ca5dcb31bb1749"
+    employees_ep = "https://www.linkedin.com/voyager/api/graphql?variables=(start:{offset},query:(flagshipSearchIntent:SEARCH_SRP,{search}queryParameters:List((key:currentCompany,value:List({company_id})),(key:resultType,value:List(PEOPLE))),includeFiltersInResponse:false),count:{count})&queryId=voyagerSearchDashClusters.66adc6056cf4138949ca5dcb31bb1749"
     employee_ep = "https://www.linkedin.com/voyager/api/voyagerIdentityDashProfiles?count=1&decorationId=com.linkedin.voyager.dash.deco.identity.profile.TopCardComplete-138&memberIdentity={employee_id}&q=memberIdentity"
     skills_ep = "https://www.linkedin.com/voyager/api/graphql?queryId=voyagerIdentityDashProfileComponents.277ba7d7b9afffb04683953cede751fb&queryName=ProfileComponentsBySectionType&variables=(tabIndex:0,sectionType:skills,profileUrn:urn%3Ali%3Afsd_profile%3A{employee_id},count:50)"
     experience_ep = "https://www.linkedin.com/voyager/api/graphql?queryId=voyagerIdentityDashProfileComponents.277ba7d7b9afffb04683953cede751fb&queryName=ProfileComponentsBySectionType&variables=(tabIndex:0,sectionType:experience,profileUrn:urn%3Ali%3Afsd_profile%3A{employee_id},count:50)"
     certifications_ep = "https://www.linkedin.com/voyager/api/graphql?queryId=voyagerIdentityDashProfileComponents.277ba7d7b9afffb04683953cede751fb&queryName=ProfileComponentsBySectionType&variables=(tabIndex:0,sectionType:certifications,profileUrn:urn%3Ali%3Afsd_profile%3A{employee_id},count:50)"
+    schools_ep = "https://www.linkedin.com/voyager/api/graphql?queryId=voyagerIdentityDashProfileComponents.277ba7d7b9afffb04683953cede751fb&queryName=ProfileComponentsBySectionType&variables=(tabIndex:0,sectionType:education,profileUrn:urn%3Ali%3Afsd_profile%3A{employee_id},count:50)"
 
     def __init__(self, session_file):
         self.session = utils.load_session(session_file)
-
-        self.company_id = self.staff_count = None
-        self.company_name = None
-        self.max_results = None
+        self.company_id = self.staff_count = self.num_staff = self.company_name = (
+            self.max_results
+        ) = self.search_term = None
 
     def get_company_id(self, company_name):
         res = self.session.get(f"{self.company_id_ep}{company_name}")
@@ -29,15 +33,16 @@ class LinkedInScraper:
                 res.status_code,
                 res.text[:200],
             )
-        print("Fetched company", res.status_code)
+        logger.debug(f"Fetched company {res.status_code}")
         try:
             response_json = res.json()
         except json.decoder.JSONDecodeError:
-            print(res.text[:200])
+            logger.debug(res.text[:200])
             sys.exit()
         company = response_json["elements"][0]
         staff_count = company["staffCount"]
         company_id = company["trackingInfo"]["objectUrn"].split(":")[-1]
+        logger.info(f"Found company {company_name} with {staff_count} staff")
         return company_id, staff_count
 
     def parse_staff(self, elements):
@@ -63,7 +68,11 @@ class LinkedInScraper:
                         id=linkedin_id,
                         name=name,
                         position=position,
-                        search_term=self.company_name,
+                        search_term=(
+                            f"{self.company_name}"
+                            if not self.search_term
+                            else f"{self.company_name} - {self.search_term}"
+                        ),
                     )
                 )
         return staff
@@ -80,51 +89,44 @@ class LinkedInScraper:
             profile_photo = None
 
         emp.profile_id = emp_dict["publicIdentifier"]
-        print("Fetched employee", emp.profile_id)
 
-        try:
-            emp.profile_link = (
-                f'https://www.linkedin.com/in/{emp_dict["publicIdentifier"]}'
+        emp.profile_link = f'https://www.linkedin.com/in/{emp_dict["publicIdentifier"]}'
+
+        emp.profile_photo = profile_photo
+        emp.first_name = emp_dict["firstName"]
+        emp.last_name = emp_dict["lastName"]
+        emp.followers = emp_dict.get("followingState", {}).get("followerCount")
+        emp.connections = emp_dict["connections"]["paging"]["total"]
+        emp.location = emp_dict["geoLocation"]["geo"]["defaultLocalizedName"]
+        emp.company = emp_dict["profileTopPosition"]["elements"][0]["companyName"]
+        edu_cards = emp_dict["profileTopEducation"]["elements"]
+        if edu_cards:
+            emp.school = edu_cards[0].get(
+                "schoolName", edu_cards[0].get("school", {}).get("name")
             )
-
-            emp.profile_photo = profile_photo
-            emp.first_name = emp_dict["firstName"]
-            emp.last_name = emp_dict["lastName"]
-            emp.followers = emp_dict.get("followingState", {}).get("followerCount")
-            emp.connections = emp_dict["connections"]["paging"]["total"]
-            emp.location = emp_dict["geoLocation"]["geo"]["defaultLocalizedName"]
-            emp.company = emp_dict["profileTopPosition"]["elements"][0]["companyName"]
-            edu_cards = emp_dict["profileTopEducation"]["elements"]
-            if edu_cards:
-                try:
-                    emp.school = edu_cards[0].get(
-                        "schoolName", edu_cards[0].get("school", {}).get("name")
-                    )
-                except Exception as e:
-                    pass
-            emp.influencer = emp_dict["influencer"]
-            emp.creator = emp_dict["creator"]
-            emp.premium = emp_dict["premium"]
-        except Exception as e:
-            pass
+        emp.influencer = emp_dict["influencer"]
+        emp.creator = emp_dict["creator"]
+        emp.premium = emp_dict["premium"]
 
     def fetch_employee(self, base_staff):
         ep = self.employee_ep.format(employee_id=base_staff.id)
         res = self.session.get(ep)
-        print("Fetched employee", base_staff.id, res.status_code)
+        logger.debug(f"basic info, status code - {res.status_code}")
+        if res.status_code == 429:
+            return TooManyRequests("429 Too Many Requests")
         if not res.ok:
-            print(res.text[:200])
+            logger.debug(res.text[:200])
             return False
         try:
             res_json = res.json()
         except json.decoder.JSONDecodeError:
-            print(res.text[:200])
+            logger.debug(res.text[:200])
             return False
 
         try:
             employee_json = res_json["elements"][0]
         except (KeyError, IndexError, TypeError):
-            print(res_json)
+            logger.debug(res_json)
             return False
 
         self.parse_emp(base_staff, employee_json)
@@ -132,39 +134,40 @@ class LinkedInScraper:
 
     def fetch_skills(self, staff):
         ep = self.skills_ep.format(employee_id=staff.id)
-        print("Fetched employee skills", staff.profile_id)
         res = self.session.get(ep)
+        logger.debug(f"skills, status code - {res.status_code}")
+        if res.status_code == 429:
+            return TooManyRequests("429 Too Many Requests")
         if not res.ok:
-            print(res.text[:200])
+            logger.debug(res.text[:200])
             return False
         try:
             res_json = res.json()
         except json.decoder.JSONDecodeError:
-            print(res.text[:200])
+            logger.debug(res.text[:200])
             return False
 
-        try:
-            skills_json = res_json["data"][
-                "identityDashProfileComponentsBySectionType"
-            ]["elements"][0]["components"]["tabComponent"]["sections"]
-        except (KeyError, IndexError, TypeError) as e:
-            print(res_json)
-            return False
-
-        staff.skills = self.parse_skills(skills_json)
+        tab_comp = res_json["data"]["identityDashProfileComponentsBySectionType"][
+            "elements"
+        ][0]["components"]["tabComponent"]
+        if tab_comp:
+            sections = tab_comp["sections"]
+            staff.skills = self.parse_skills(sections)
         return True
 
     def fetch_experiences(self, staff):
         ep = self.experience_ep.format(employee_id=staff.id)
-        print("Fetched employee exps", staff.profile_id)
         res = self.session.get(ep)
+        logger.debug(f"exps, status code - {res.status_code}")
+        if res.status_code == 429:
+            return TooManyRequests("429 Too Many Requests")
         if not res.ok:
-            print(res.text[:200])
+            logger.debug(res.text[:200])
             return False
         try:
             res_json = res.json()
         except json.decoder.JSONDecodeError:
-            print(res.text[:200])
+            logger.debug(res.text[:200])
             return False
 
         try:
@@ -174,7 +177,7 @@ class LinkedInScraper:
                 "elements"
             ]
         except (KeyError, IndexError, TypeError) as e:
-            print(res_json)
+            logger.debug(res_json)
             return False
 
         staff.experiences = self.parse_experiences(skills_json)
@@ -182,27 +185,77 @@ class LinkedInScraper:
 
     def fetch_certifications(self, staff):
         ep = self.certifications_ep.format(employee_id=staff.id)
-        print("Fetched employee certs", staff.profile_id)
         res = self.session.get(ep)
+        logger.debug(f"certs, status code - {res.status_code}")
+        if res.status_code == 429:
+            return TooManyRequests("429 Too Many Requests")
         if not res.ok:
-            print(res.text[:200])
+            logger.debug(res.text[:200])
             return False
         try:
             res_json = res.json()
         except json.decoder.JSONDecodeError:
-            print(res.text[:200])
+            logger.debug(res.text[:200])
             return False
 
         try:
-            certs_json = res_json["data"]["identityDashProfileComponentsBySectionType"][
+            elems = res_json["data"]["identityDashProfileComponentsBySectionType"][
+                "elements"
+            ]
+        except (KeyError, IndexError, TypeError) as e:
+            logger.debug(res_json)
+            return False
+        if elems:
+            cert_elems = elems[0]["components"]["pagedListComponent"]["components"][
+                "elements"
+            ]
+            staff.certifications = self.parse_certifications(cert_elems)
+        return True
+
+    def fetch_schools(self, staff):
+        ep = self.schools_ep.format(employee_id=staff.id)
+        res = self.session.get(ep)
+        logger.debug(f"schools, status code - {res.status_code}")
+        if res.status_code == 429:
+            return TooManyRequests("429 Too Many Requests")
+
+        if not res.ok:
+            logger.debug(res.text[:200])
+            return False
+        try:
+            res_json = res.json()
+        except json.decoder.JSONDecodeError:
+            logger.debug(res.text[:200])
+            return False
+
+        try:
+            elements = res_json["data"]["identityDashProfileComponentsBySectionType"][
                 "elements"
             ][0]["components"]["pagedListComponent"]["components"]["elements"]
         except (KeyError, IndexError, TypeError) as e:
-            print(res_json)
+            logger.debug(res_json)
             return False
 
-        staff.certifications = self.parse_certifications(certs_json)
+        staff.schools = self.parse_schools(elements)
         return True
+
+    def parse_schools(self, elements):
+        schools = []
+        for elem in elements:
+            entity = elem["components"]["entityComponent"]
+            if not entity:
+                break
+            years = entity["caption"]["text"] if entity["caption"] else None
+            school_name = entity["titleV2"]["text"]["text"]
+            degree = entity["subtitle"]["text"] if entity["subtitle"] else None
+            school = School(
+                years=years,
+                school=school_name,
+                degree=degree,
+            )
+            schools.append(school)
+
+        return schools
 
     def parse_certifications(self, sections):
         certs = []
@@ -211,7 +264,7 @@ class LinkedInScraper:
             if not elem:
                 break
             title = elem["titleV2"]["text"]["text"]
-            issuer = elem["subtitle"]["text"]
+            issuer = elem["subtitle"]["text"] if elem["subtitle"] else None
             date_issued = (
                 elem["caption"]["text"].replace("Issued ", "")
                 if elem["caption"]
@@ -242,65 +295,88 @@ class LinkedInScraper:
 
     def fetch_staff(self, offset, company_id):
         ep = self.employees_ep.format(
-            offset=offset, company_id=company_id, count=min(50, self.max_results)
+            offset=offset,
+            company_id=company_id,
+            count=min(50, self.max_results),
+            search=f"keywords:{quote(self.search_term)}," if self.search_term else "",
         )
         res = self.session.get(ep)
+        logger.debug(f"employees, status code - {res.status_code}")
+        if res.status_code == 429:
+            return TooManyRequests("429 Too Many Requests")
         if not res.ok:
             return
         try:
             res_json = res.json()
         except json.decoder.JSONDecodeError:
-            print(res.text[:200])
+            logger.debug(res.text[:200])
             return False
 
         try:
             elements = res_json["data"]["searchDashClustersByAll"]["elements"]
         except (KeyError, IndexError, TypeError):
-            print(res_json)
+            logger.debug(res_json)
             return False
-
-        return self.parse_staff(elements) if elements else []
+        new_staff = self.parse_staff(elements) if elements else []
+        logger.debug(
+            f"Fetched {len(new_staff)} employees at offset {offset} / {self.num_staff}"
+        )
+        return new_staff
 
     def scrape_staff(
         self,
-        company_name,
-        profile_details,
-        skills,
-        experiences,
-        certifications,
-        max_results,
-        num_threads,
+        company_name: str,
+        search_term: str,
+        extra_profile_data: bool,
+        max_results: int,
     ):
+        self.search_term = search_term
         self.company_name = company_name
         self.max_results = max_results
         company_id, staff_count = self.get_company_id(company_name)
         staff_list: list[Staff] = []
-        for offset in range(0, min(staff_count, max_results), 50):
+        self.num_staff = min(staff_count, max_results, 1000)
+        for offset in range(0, self.num_staff, 50):
             staff = self.fetch_staff(offset, company_id)
             if not staff:
                 break
             staff_list += staff
-        print(f"Found {len(staff_list)} staff")
+        logger.info(f"Found {len(staff_list)} staff")
         reduced_staff_list = staff_list[:max_results]
 
         non_restricted = list(
             filter(lambda x: x.name != "LinkedIn Member", reduced_staff_list)
         )
-        if profile_details:
-            with ThreadPoolExecutor(max_workers=num_threads) as executor:
-                list(executor.map(self.fetch_employee, non_restricted))
 
-        if skills:
-            with ThreadPoolExecutor(max_workers=num_threads) as executor:
-                list(executor.map(self.fetch_skills, non_restricted))
+        def fetch_all_info_for_employee(employee: Staff, index: int):
+            logger.info(
+                f"Fetching employee data for {employee.id} {index} / {self.num_staff}"
+            )
 
-        if experiences:
-            with ThreadPoolExecutor(max_workers=num_threads) as executor:
-                list(executor.map(self.fetch_experiences, non_restricted))
+            with ThreadPoolExecutor(max_workers=5) as executor:
+                tasks = {}
+                tasks[executor.submit(self.fetch_employee, employee)] = "employee"
+                tasks[executor.submit(self.fetch_skills, employee)] = "skills"
+                tasks[executor.submit(self.fetch_experiences, employee)] = "experiences"
+                tasks[executor.submit(self.fetch_certifications, employee)] = (
+                    "certifications"
+                )
+                tasks[executor.submit(self.fetch_schools, employee)] = "schools"
 
-        if certifications:
-            with ThreadPoolExecutor(max_workers=num_threads) as executor:
-                list(executor.map(self.fetch_certifications, non_restricted))
+                for future in as_completed(tasks):
+                    result = future.result()
+                    if isinstance(result, TooManyRequests):
+                        logger.debug(f"API rate limit exceeded for {tasks[future]}")
+                        raise TooManyRequests(
+                            f"Stopping due to API rate limit exceeded for {tasks[future]}"
+                        )
+
+        if extra_profile_data:
+            try:
+                for i, employee in enumerate(non_restricted, start=1):
+                    fetch_all_info_for_employee(employee, i)
+            except TooManyRequests as e:
+                logger.error(str(e))
 
         return reduced_staff_list
 
@@ -338,7 +414,12 @@ class LinkedInScraper:
         for elem in elements:
             entity = elem["components"]["entityComponent"]
             try:
-                if entity["caption"]:
+                if (
+                    not entity["subComponents"]
+                    or not entity["subComponents"]["components"][0]["components"][
+                        "pagedListComponent"
+                    ]
+                ):
                     emp_type = None
                     duration = entity["caption"]["text"]
                     from_date, to_date = utils.parse_duration(duration)
@@ -369,10 +450,8 @@ class LinkedInScraper:
                     exps += multi_exps
 
             except Exception as e:
-                import traceback
+                logger.exception(e)
 
-                traceback.print_exc()
-                pass
         return exps
 
     def parse_skills(self, sections):
@@ -394,9 +473,3 @@ class LinkedInScraper:
                     endorsements = None
                 skills.append(Skill(name=skill, endorsements=endorsements))
         return skills
-
-
-if __name__ == "__main__":
-    scraper = LinkedInScraper()
-    staff_result = scraper.scrape_staff("openai")
-    pass
