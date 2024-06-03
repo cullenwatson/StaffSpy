@@ -61,10 +61,9 @@ Optional
 ├── log_level (int): 
 |    Controls the verbosity of the runtime printouts 
 |    (0 prints only errors, 1 is info, 2 is all logs. Default is 0.)
-│
+```
 
 ### Staff Schema
-
 ```plaintext
 Staff
 ├── search_term
