@@ -1,8 +1,8 @@
 import pandas as pd
 
-from linkedin import LinkedInScraper
+from staffspy.linkedin import LinkedInScraper
 
-from .utils import set_logger_level, logger
+from staffspy.utils import set_logger_level, logger
 
 
 def scrape_staff(
