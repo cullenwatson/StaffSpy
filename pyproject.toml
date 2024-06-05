@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "staffspy"
-version = "0.1.4"
+version = "0.1.5"
 description = "Staff scraper library for LinkedIn"
 authors = ["Cullen Watson <cullen@bunsly.com>"]
 readme = "README.md"
@@ -11,6 +11,7 @@ selenium = "^4.21.0"
 pydantic = "^2.7.2"
 pandas = "^2.2.2"
 requests = "^2.32.3"
+tldextract = "^5.1.2"
 
 
 [tool.poetry.group.dev.dependencies]

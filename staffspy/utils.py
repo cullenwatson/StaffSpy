@@ -5,6 +5,7 @@ import sys
 from datetime import datetime
 
 import requests
+import tldextract
 from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
 
@@ -24,6 +25,18 @@ def set_csrf_token(session):
     csrf_token = session.cookies["JSESSIONID"].replace('"', "")
     session.headers.update({"Csrf-Token": csrf_token})
     return session
+
+
+def extract_base_domain(url: str):
+    extracted = tldextract.extract(url)
+    base_domain = "{}.{}".format(extracted.domain, extracted.suffix)
+    return base_domain
+
+
+def create_email(first, last, domain):
+    first = "".join(filter(str.isalpha, first))
+    last = "".join(filter(str.isalpha, last))
+    return f"{first.lower()}.{last.lower()}@{domain}"
 
 
 def get_webdriver():

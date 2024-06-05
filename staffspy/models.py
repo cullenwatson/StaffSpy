@@ -23,7 +23,7 @@ class Skill(BaseModel):
     def to_dict(self):
         return {
             "name": self.name,
-            "endorsements": self.endorsements,
+            "endorsements": self.endorsements if self.endorsements else 0,
         }
 
 
@@ -75,6 +75,7 @@ class Staff(BaseModel):
     profile_link: str | None = None
     first_name: str | None = None
     last_name: str | None = None
+    potential_email: str | None = None
     followers: int | None = None
     connections: int | None = None
     location: str | None = None
@@ -98,6 +99,7 @@ class Staff(BaseModel):
             "profile_id": self.profile_id,
             "first_name": self.first_name,
             "last_name": self.last_name,
+            "potential_email": self.potential_email,
             "company": self.company,
             "school": self.school,
             "location": self.location,
