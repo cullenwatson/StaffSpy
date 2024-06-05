@@ -38,11 +38,11 @@ staff.to_csv(filename, index=False)
 A browser will open to sign in to LinkedIn on the first sign-in. Press enter after signing in to begin scraping.
 
 ### Output
-| Name              | Position                          | Profile ID                | First Name      | Last Name | Company | School                                     | Location                                |
-|-------------------|-----------------------------------|---------------------------|-----------------|-----------|---------|--------------------------------------------|-----------------------------------------|
-| Ethan C.          | Software Engineer @ OpenAI        | ethan-c-772952138         | Ethan           | C.        | OpenAI  | University of Southern California          | Los Angeles, California, United States  |
-| Pavel K.          | Software Engineer!                | pavel-komlev              | Pavel           | K.        | OpenAI  | Lomonosov Moscow State University (MSU)    | Redmond, Washington, United States      |
-| Jason (Qiang) Xu  | Software Engineer                 | jason-qiang-xu-7101b025   | Jason (Qiang)   | Xu        | OpenAI  | Texas A&M University                       | San Francisco, California, United States|
+| Name              | Position                          | Profile ID                | First Name      | Last Name | Company | School                                     | Location                                | Potential Email                  |
+|-------------------|-----------------------------------|---------------------------|-----------------|-----------|---------|--------------------------------------------|-----------------------------------------|----------------------------------|
+| Ethan C.          | Software Engineer @ OpenAI        | ethan-c-772952138         | Ethan           | C.        | OpenAI  | University of Southern California          | Los Angeles, California, United States  | ethan.c@openai.com               |
+| Pavel K.          | Software Engineer!                | pavel-komlev              | Pavel           | K.        | OpenAI  | Lomonosov Moscow State University (MSU)    | Redmond, Washington, United States      | pavel.k@openai.com               |
+| Jason (Qiang) Xu  | Software Engineer                 | jason-qiang-xu-7101b025   | Jason (Qiang)   | Xu        | OpenAI  | Texas A&M University                       | San Francisco, California, United States| jason.xu@openai.com              |
 
 
 ### Parameters for `scrape_staff()`
@@ -84,6 +84,7 @@ Staff
 ├── profile_link
 ├── first_name
 ├── last_name
+├── potential_email
 |
 ├── followers
 ├── connections
