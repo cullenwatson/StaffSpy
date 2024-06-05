@@ -22,8 +22,8 @@ class LinkedInScraper:
     def __init__(self, session_file):
         self.session = utils.load_session(session_file)
         self.company_id = self.staff_count = self.num_staff = self.company_name = (
-            self.max_results
-        ) = self.search_term = None
+            self.domain
+        ) = self.max_results = self.search_term = None
 
     def get_company_id(self, company_name):
         res = self.session.get(f"{self.company_id_ep}{company_name}")
@@ -40,6 +40,7 @@ class LinkedInScraper:
             logger.debug(res.text[:200])
             sys.exit()
         company = response_json["elements"][0]
+        self.domain = utils.extract_base_domain(company["companyPageUrl"])
         staff_count = company["staffCount"]
         company_id = company["trackingInfo"]["objectUrn"].split(":")[-1]
         logger.info(f"Found company {company_name} with {staff_count} staff")
@@ -95,6 +96,10 @@ class LinkedInScraper:
         emp.profile_photo = profile_photo
         emp.first_name = emp_dict["firstName"]
         emp.last_name = emp_dict["lastName"]
+        emp.potential_email = utils.create_email(
+            emp.first_name, emp.last_name, self.domain
+        )
+
         emp.followers = emp_dict.get("followingState", {}).get("followerCount")
         emp.connections = emp_dict["connections"]["paging"]["total"]
         emp.location = emp_dict["geoLocation"]["geo"]["defaultLocalizedName"]
