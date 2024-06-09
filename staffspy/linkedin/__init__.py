@@ -6,24 +6,25 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import staffspy.utils as utils
 from staffspy.utils import logger
-from staffspy.exceptions import TooManyRequests
+from staffspy.exceptions import TooManyRequests, BadCookies, GeoUrnNotFound
 from staffspy.models import Staff, Experience, Certification, Skill, School
 
 
 class LinkedInScraper:
     company_id_ep = "https://www.linkedin.com/voyager/api/organization/companies?q=universalName&universalName="
-    employees_ep = "https://www.linkedin.com/voyager/api/graphql?variables=(start:{offset},query:(flagshipSearchIntent:SEARCH_SRP,{search}queryParameters:List((key:currentCompany,value:List({company_id})),(key:resultType,value:List(PEOPLE))),includeFiltersInResponse:false),count:{count})&queryId=voyagerSearchDashClusters.66adc6056cf4138949ca5dcb31bb1749"
+    employees_ep = "https://www.linkedin.com/voyager/api/graphql?variables=(start:{offset},query:(flagshipSearchIntent:SEARCH_SRP,{search}queryParameters:List((key:currentCompany,value:List({company_id})),{location}(key:resultType,value:List(PEOPLE))),includeFiltersInResponse:false),count:{count})&queryId=voyagerSearchDashClusters.66adc6056cf4138949ca5dcb31bb1749"
     employee_ep = "https://www.linkedin.com/voyager/api/voyagerIdentityDashProfiles?count=1&decorationId=com.linkedin.voyager.dash.deco.identity.profile.TopCardComplete-138&memberIdentity={employee_id}&q=memberIdentity"
     skills_ep = "https://www.linkedin.com/voyager/api/graphql?queryId=voyagerIdentityDashProfileComponents.277ba7d7b9afffb04683953cede751fb&queryName=ProfileComponentsBySectionType&variables=(tabIndex:0,sectionType:skills,profileUrn:urn%3Ali%3Afsd_profile%3A{employee_id},count:50)"
     experience_ep = "https://www.linkedin.com/voyager/api/graphql?queryId=voyagerIdentityDashProfileComponents.277ba7d7b9afffb04683953cede751fb&queryName=ProfileComponentsBySectionType&variables=(tabIndex:0,sectionType:experience,profileUrn:urn%3Ali%3Afsd_profile%3A{employee_id},count:50)"
     certifications_ep = "https://www.linkedin.com/voyager/api/graphql?queryId=voyagerIdentityDashProfileComponents.277ba7d7b9afffb04683953cede751fb&queryName=ProfileComponentsBySectionType&variables=(tabIndex:0,sectionType:certifications,profileUrn:urn%3Ali%3Afsd_profile%3A{employee_id},count:50)"
     schools_ep = "https://www.linkedin.com/voyager/api/graphql?queryId=voyagerIdentityDashProfileComponents.277ba7d7b9afffb04683953cede751fb&queryName=ProfileComponentsBySectionType&variables=(tabIndex:0,sectionType:education,profileUrn:urn%3Ali%3Afsd_profile%3A{employee_id},count:50)"
+    urn_ep = "https://www.linkedin.com/voyager/api/graphql?queryId=voyagerSearchDashReusableTypeahead.57a4fa1dd92d3266ed968fdbab2d7bf5&queryName=SearchReusableTypeaheadByType&variables=(query:(showFullLastNameForConnections:false,typeaheadFilterQuery:(geoSearchTypes:List(MARKET_AREA,COUNTRY_REGION,ADMIN_DIVISION_1,CITY))),keywords:{location},type:GEO,start:0)"
 
     def __init__(self, session_file):
         self.session = utils.load_session(session_file)
         self.company_id = self.staff_count = self.num_staff = self.company_name = (
             self.domain
-        ) = self.max_results = self.search_term = None
+        ) = self.max_results = self.search_term = self.location = None
 
     def get_company_id(self, company_name):
         res = self.session.get(f"{self.company_id_ep}{company_name}")
@@ -304,11 +305,17 @@ class LinkedInScraper:
             company_id=company_id,
             count=min(50, self.max_results),
             search=f"keywords:{quote(self.search_term)}," if self.search_term else "",
+            location=(
+                f"(key:geoUrn,value:List({self.location}))," if self.location else ""
+            ),
         )
+        print(self.location)
         res = self.session.get(ep)
         logger.debug(f"employees, status code - {res.status_code}")
-        if res.status_code == 429:
-            return TooManyRequests("429 Too Many Requests")
+        if res.status_code == 400:
+            raise BadCookies("Outdated login, delete the session file to log in again")
+        elif res.status_code == 429:
+            raise TooManyRequests("429 Too Many Requests")
         if not res.ok:
             return
         try:
@@ -328,25 +335,67 @@ class LinkedInScraper:
         )
         return new_staff
 
+    def fetch_urn(self, location: str):
+        ep = self.urn_ep.format(location=quote(location))
+        res = self.session.get(ep)
+        try:
+            res_json = res.json()
+        except json.decoder.JSONDecodeError:
+            logger.debug(res.text[:200])
+            raise GeoUrnNotFound("Failed to find geo id")
+
+        try:
+            elems = res_json["data"]["searchDashReusableTypeaheadByType"]["elements"]
+        except (KeyError, IndexError, TypeError):
+            logger.debug(res_json)
+            raise GeoUrnNotFound("Failed to find geo id")
+
+        geo_id = None
+        if elems:
+            urn = elems[0]["trackingUrn"]
+            m = re.search("urn:li:geo:(.+)", urn)
+            if m:
+                geo_id = m.group(1)
+        if not geo_id:
+            raise GeoUrnNotFound("Failed to find geo id")
+        self.location = geo_id
+
     def scrape_staff(
         self,
         company_name: str,
         search_term: str,
+        location: str,
         extra_profile_data: bool,
         max_results: int,
     ):
         self.search_term = search_term
         self.company_name = company_name
         self.max_results = max_results
+
         company_id, staff_count = self.get_company_id(company_name)
         staff_list: list[Staff] = []
         self.num_staff = min(staff_count, max_results, 1000)
-        for offset in range(0, self.num_staff, 50):
-            staff = self.fetch_staff(offset, company_id)
-            if not staff:
-                break
-            staff_list += staff
-        logger.info(f"Found {len(staff_list)} staff")
+
+        if location:
+            try:
+                self.fetch_urn(location)
+            except GeoUrnNotFound as e:
+                logger.error(str(e))
+                return staff_list[:max_results]
+
+        try:
+            for offset in range(0, self.num_staff, 50):
+                staff = self.fetch_staff(offset, company_id)
+                if not staff:
+                    break
+                staff_list += staff
+            logger.info(
+                f"Found {len(staff_list)} staff at {company_name} {f'at {location}' if location else ''}"
+            )
+        except (BadCookies, TooManyRequests) as e:
+            logger.error(str(e))
+            return staff_list[:max_results]
+
         reduced_staff_list = staff_list[:max_results]
 
         non_restricted = list(
@@ -380,7 +429,7 @@ class LinkedInScraper:
             try:
                 for i, employee in enumerate(non_restricted, start=1):
                     fetch_all_info_for_employee(employee, i)
-            except TooManyRequests as e:
+            except (BadCookies, TooManyRequests) as e:
                 logger.error(str(e))
 
         return reduced_staff_list
