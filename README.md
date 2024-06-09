@@ -26,6 +26,7 @@ session_file = Path(__file__).resolve().parent / "session.pkl"
 staff = scrape_staff(
     company_name="openai",
     search_term="software engineer",
+    location="london",
     extra_profile_data=True,
 
     max_results=50,
@@ -38,11 +39,11 @@ staff.to_csv(filename, index=False)
 A browser will open to sign in to LinkedIn on the first sign-in. Press enter after signing in to begin scraping.
 
 ### Output
-| name              | position                           | profile_id                | first_name | last_name | potential_email             | company | school                                | location                               | followers | connections | premium |
-|-------------------|------------------------------------|---------------------------|------------|-----------|-----------------------------|---------|---------------------------------------|----------------------------------------|-----------|-------------|---------|
-| Pavel K.          | Software Engineer!                 | pavel-komlev              | Pavel      | K.        | pavel.k@openai.com          | OpenAI  | Lomonosov Moscow State University (MSU)| Redmond, Washington, United States     | 389       | 383         | FALSE   |
-| Michael Harris    | Software Engineer at OpenAI \| ex-Palantir | michael-harris-453488125 | Michael    | Harris    | michael.harris@openai.com   | OpenAI  | Stanford University                    | United States                          | 362       | 351         | FALSE   |
-| Jason (Qiang) Xu  | Software Engineer                  | jason-qiang-xu-7101b025   | Jason (Qiang)| Xu      | jasonqiang.xu@openai.com    | OpenAI  | Texas A&M University                   | San Francisco, California, United States| 508       | 489         | FALSE   |
+| name           | position                                   | profile_id          | first_name | last_name | potential_email              | company | school                                         | location                                 | followers | connections | premium |
+|----------------|--------------------------------------------|---------------------|------------|-----------|------------------------------|---------|-----------------------------------------------|------------------------------------------|-----------|-------------|---------|
+| Andrei Gheorghe| Product Engineer                           | idevelop            | Andrei     | Gheorghe  | andrei.gheorghe@openai.com   | OpenAI  | Universitatea „Politehnica” din București    | London, England, United Kingdom           | 723       | 704         | FALSE   |
+| Douglas Li     | @ OpenAI UK, previously at Meta            | dougli              | Douglas    | Li        | douglas.li@openai.com        | OpenAI  | Washington University in St. Louis          | London, England, United Kingdom           | 533       | 401         | TRUE    |
+| Javier Sierra  | Software Engineer                          | javiersierra2102    | Javier     | Sierra    | javier.sierra@openai.com     | OpenAI  | Hult International Business School          | London, England, United Kingdom           | 726       | 717         | FALSE   |
 
 
 ### Parameters for `scrape_staff()`
@@ -54,14 +55,18 @@ A browser will open to sign in to LinkedIn on the first sign-in. Press enter aft
 
 Optional 
 ├── search_term (str): 
-|    employee title to search for
+|    staff title to search for
 |    e.g. software engineer
+|
+├── location (str): 
+|    location the staff resides
+|    e.g. lodon
 │
 ├── extra_profile_data (bool)
 |    fetches educations, experiences, skills, certifications (Default false)
 │
 ├── max_results (int): 
-|    number of employees to fetch, default/max is 1000 for a search imposed by LinkedIn
+|    number of staff to fetch, default/max is 1000 for a search imposed by LinkedIn
 │
 ├── session_file (str): 
 |    file path to save session cookies, so only one manual login is needed.
