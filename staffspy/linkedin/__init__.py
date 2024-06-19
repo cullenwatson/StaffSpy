@@ -478,7 +478,7 @@ class LinkedInScraper:
                     from_date, to_date = utils.parse_duration(duration)
                     if from_date:
                         duration = duration.split(" · ")[1]
-                    company = entity["subtitle"]["text"]
+                    company = entity["subtitle"]["text"] if entity["subtitle"] else None
                     title = entity["titleV2"]["text"]["text"]
                     location = (
                         entity["metadata"]["text"] if entity["metadata"] else None
