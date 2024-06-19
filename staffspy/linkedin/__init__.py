@@ -309,7 +309,6 @@ class LinkedInScraper:
                 f"(key:geoUrn,value:List({self.location}))," if self.location else ""
             ),
         )
-        print(self.location)
         res = self.session.get(ep)
         logger.debug(f"employees, status code - {res.status_code}")
         if res.status_code == 400:
