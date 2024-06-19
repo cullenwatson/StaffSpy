@@ -60,7 +60,7 @@ Optional
 |
 ├── location (str): 
 |    location the staff resides
-|    e.g. lodon
+|    e.g. london
 │
 ├── extra_profile_data (bool)
 |    fetches educations, experiences, skills, certifications (Default false)
@@ -126,7 +126,11 @@ Staff
     ├── school
     └── degree
 ```
-
+```
+└── LinkedIn notes:
+|    - only 1000 max results per search
+|    - extra_profile_data increases runtime by O(n)
+```
 
 ## Frequently Asked Questions
 
