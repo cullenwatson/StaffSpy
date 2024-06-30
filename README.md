@@ -141,7 +141,7 @@ Staff
 
 ---
 
-**Q: Scraped 999 staff members, with 869 hidedn LinkedIn Members"?**  
+**Q: Scraped 999 staff members, with 869 hidedn LinkedIn Members?**  
 **A:** It means your LinkedIn account is bad. Not sure how they classify it but unverified email and a bunch of factors go into it.
 
 ---
