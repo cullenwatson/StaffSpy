@@ -27,10 +27,10 @@ staff = scrape_staff(
     company_name="openai",
     search_term="software engineer",
     location="london",
-    extra_profile_data=True,
+    extra_profile_data=True, # fetch all past experiences, schools, & skills
 
-    max_results=50,
-    session_file=str(session_file),
+    max_results=50, # can go up to 1000
+    session_file=str(session_file), # save browser cookies
     log_level=1,
 )
 filename = f"staff.csv"
