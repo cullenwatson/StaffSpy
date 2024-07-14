@@ -3,12 +3,12 @@ import os
 import pickle
 import sys
 from datetime import datetime
+from urllib.parse import quote
 
 import requests
 import tldextract
 from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
-
 
 logger = logging.getLogger("StaffSpy")
 logger.propagate = False
@@ -40,7 +40,7 @@ def create_email(first, last, domain):
 
 
 def get_webdriver():
-    for browser in [webdriver.Firefox, webdriver.Chrome]:
+    for browser in [webdriver.Chrome, webdriver.Firefox]:
         try:
             return browser()
         except WebDriverException:
@@ -78,15 +78,57 @@ def login():
     return session
 
 
+def login_requests(username, password):
+
+    url = "https://www.linkedin.com/uas/authenticate"
+
+    encoded_username = quote(username)
+    encoded_password = quote(password)
+    payload = f"session_key={encoded_username}&session_password={encoded_password}&lang=v%3D2%26lang%3Den-US"
+    headers = {
+        "Host": "www.linkedin.com",
+        "content-type": "application/x-www-form-urlencoded",
+        "accept": "*/*",
+        "x-li-lang": "en-US",
+        "accept-language": "en-US,en;q=0.9",
+        "x-restli-protocol-version": "2.0.0",
+        "x-li-user-agent": "LIAuthLibrary:44.0.* com.linkedin.LinkedIn:9.29.8962 iPhone:17.5.1",
+        "user-agent": "LinkedIn/9.29.8962 CFNetwork/1496.0.7 Darwin/23.5.0",
+    }
+
+    response = requests.post(url, headers=headers, data=payload)
+    if response.status_code != 200:
+        logger.error(f"Error: {response.status_code} {response.text}")
+        return None
+    session = requests.Session()
+    for cookie in response.cookies:
+        session.cookies.set(cookie.name, cookie.value)
+
+    user_agent = "Mozilla/5.0 (Linux; U; Android 4.4.2; en-us; SCH-I535 Build/KOT49H) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30"
+    session.headers.update(
+        {
+            "User-Agent": user_agent,
+            "X-RestLi-Protocol-Version": "2.0.0",
+            "X-Li-Track": '{"clientVersion":"1.13.1665"}',
+        }
+    )
+
+    session = set_csrf_token(session)
+    return session
+
+
 def save_session(session, session_file):
     data = {"cookies": session.cookies, "headers": session.headers}
     with open(session_file, "wb") as f:
         pickle.dump(data, f)
 
 
-def load_session(session_file):
+def load_session(session_file, username, password):
     if not session_file or not os.path.exists(session_file):
-        session = login()
+        if username and password:
+            session = login_requests(username, password)
+        else:
+            session = login()
         if not session:
             sys.exit("Failed to log in.")
         if session_file:
@@ -95,7 +137,7 @@ def load_session(session_file):
         with open(session_file, "rb") as f:
             data = pickle.load(f)
             session = requests.Session()
-            session.cookies.update(data["cookies"])
+            session.headers.update(data["cookies"])
             session.headers.update(data["headers"])
     return session
 
