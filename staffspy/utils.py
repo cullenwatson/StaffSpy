@@ -137,7 +137,7 @@ def load_session(session_file, username, password):
         with open(session_file, "rb") as f:
             data = pickle.load(f)
             session = requests.Session()
-            session.headers.update(data["cookies"])
+            session.cookies.update(data["cookies"])
             session.headers.update(data["headers"])
     return session
 
