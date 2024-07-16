@@ -39,7 +39,8 @@ class LinkedInScraper:
             self.max_results,
             self.search_term,
             self.location,
-        ) = (None, None, None, None, None, None, None, None)
+            self.raw_location,
+        ) = (None, None, None, None, None, None, None, None, None)
         self.certs = CertificationFetcher(self.session)
         self.skills = SkillsFetcher(self.session)
         self.employees = EmployeeFetcher(self.session)
@@ -93,10 +94,15 @@ class LinkedInScraper:
                         id=linkedin_id,
                         name=name,
                         position=position,
-                        search_term=(
-                            f"{self.company_name}"
-                            if not self.search_term
-                            else f"{self.company_name} - {self.search_term}"
+                        search_term=" - ".join(
+                            filter(
+                                None,
+                                [
+                                    self.company_name,
+                                    self.search_term,
+                                    self.raw_location,
+                                ],
+                            )
                         ),
                     )
                 )
@@ -138,9 +144,9 @@ class LinkedInScraper:
         )
         return new_staff
 
-    def fetch_location_id(self, location: str):
+    def fetch_location_id(self):
         """Fetch the location id for the location to be used in LinkedIn search"""
-        ep = self.location_id_ep.format(location=quote(location))
+        ep = self.location_id_ep.format(location=quote(self.raw_location))
         res = self.session.get(ep)
         try:
             res_json = res.json()
@@ -175,14 +181,15 @@ class LinkedInScraper:
         self.search_term = search_term
         self.company_name = company_name
         self.max_results = max_results
+        self.raw_location = location
 
         company_id, staff_count = self.get_company_id(company_name)
         staff_list: list[Staff] = []
         self.num_staff = min(staff_count, max_results, 1000)
 
-        if location:
+        if self.raw_location:
             try:
-                self.fetch_location_id(location)
+                self.fetch_location_id()
             except GeoUrnNotFound as e:
                 logger.error(str(e))
                 return staff_list[:max_results]

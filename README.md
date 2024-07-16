@@ -25,8 +25,8 @@ session_file = Path(__file__).resolve().parent / "session.pkl"
 
 staff = scrape_staff(
     company_name="openai",
-    search_term="software engineer",
-    location="london",
+    search_term="software engineer", # optional
+    location="london", # optional
     extra_profile_data=True, # fetch all past experiences, schools, & skills
 
     max_results=50, # can go up to 1000
@@ -83,6 +83,7 @@ Staff
 ├── search_term
 ├── id
 ├── name
+├── bio
 |
 ├── position
 ├── profile_id
@@ -93,6 +94,7 @@ Staff
 |
 ├── followers
 ├── connections
+├── mutual_connections
 |
 ├── location
 ├── company
@@ -101,8 +103,6 @@ Staff
 ├── influencer
 ├── creator
 ├── premium
-|
-├── bio
 ├── profile_photo
 |
 ├── skills

@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 
 import utils
 from exceptions import TooManyRequests
@@ -74,4 +75,17 @@ class EmployeeFetcher:
         emp.influencer = emp_dict["influencer"]
         emp.creator = emp_dict["creator"]
         emp.premium = emp_dict["premium"]
+        try:
+            profile_insight = emp_dict["profileInsight"]["elements"]
+            if profile_insight:
+                mutual_connections_str = profile_insight[0]["text"]["text"]
+                match = re.search(r"\d+", mutual_connections_str)
+                if match:
+                    emp.mutual_connections = int(match.group()) + 2
+                else:
+                    emp.mutual_connections = (
+                        2 if " and " in mutual_connections_str else 1
+                    )
+        except:
+            emp.mutual_connections = None
         pass
