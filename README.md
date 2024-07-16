@@ -38,7 +38,7 @@ staff.to_csv(filename, index=False)
 ```
 A browser will open to sign in to LinkedIn on the first sign-in. Press enter after signing in to begin scraping.
 
-### Output
+### Partial Output
 | name           | position                                   | profile_id          | first_name | last_name | potential_email              | company | school                                         | location                                 | followers | connections | premium |
 |----------------|--------------------------------------------|---------------------|------------|-----------|------------------------------|---------|-----------------------------------------------|------------------------------------------|-----------|-------------|---------|
 | Andrei Gheorghe| Product Engineer                           | idevelop            | Andrei     | Gheorghe  | andrei.gheorghe@openai.com   | OpenAI  | Universitatea „Politehnica” din București    | London, England, United Kingdom           | 723       | 704         | FALSE   |
