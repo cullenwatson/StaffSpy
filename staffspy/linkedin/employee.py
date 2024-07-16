@@ -2,8 +2,8 @@ import json
 import logging
 import re
 
-import utils
-from exceptions import TooManyRequests
+import staffspy.utils as utils
+from staffspy.exceptions import TooManyRequests
 
 logger = logging.getLogger(__name__)
 

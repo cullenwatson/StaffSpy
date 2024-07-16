@@ -5,20 +5,20 @@ staffspy.linkedin
 This module contains routines to scrape LinkedIn.
 """
 
+import json
 import re
 import sys
-import json
-from urllib.parse import quote
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from urllib.parse import quote
 
 import staffspy.utils as utils
-from linkedin.certifications import CertificationFetcher
-from linkedin.employee import EmployeeFetcher
-from linkedin.employee_bio import EmployeeBioFetcher
-from linkedin.experiences import ExperiencesFetcher
-from linkedin.schools import SchoolsFetcher
-from linkedin.skills import SkillsFetcher
 from staffspy.exceptions import TooManyRequests, BadCookies, GeoUrnNotFound
+from staffspy.linkedin.certifications import CertificationFetcher
+from staffspy.linkedin.employee import EmployeeFetcher
+from staffspy.linkedin.employee_bio import EmployeeBioFetcher
+from staffspy.linkedin.experiences import ExperiencesFetcher
+from staffspy.linkedin.schools import SchoolsFetcher
+from staffspy.linkedin.skills import SkillsFetcher
 from staffspy.models import Staff
 from staffspy.utils import logger
 

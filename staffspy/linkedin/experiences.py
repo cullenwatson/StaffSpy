@@ -2,8 +2,8 @@ import json
 import logging
 
 import utils
-from exceptions import TooManyRequests
-from models import Experience
+from staffspy.exceptions import TooManyRequests
+from staffspy.models import Experience
 
 logger = logging.getLogger(__name__)
 
