@@ -76,8 +76,10 @@ class Staff(BaseModel):
     first_name: str | None = None
     last_name: str | None = None
     potential_email: str | None = None
+    bio: str | None = None
     followers: int | None = None
     connections: int | None = None
+    mutual_connections: int | None = None
     location: str | None = None
     company: str | None = None
     school: str | None = None
@@ -94,6 +96,7 @@ class Staff(BaseModel):
         return {
             "search_term": self.search_term,
             "id": self.id,
+            "profile_link": self.profile_link,
             "name": self.name,
             "position": self.position,
             "profile_id": self.profile_id,
@@ -105,10 +108,11 @@ class Staff(BaseModel):
             "location": self.location,
             "followers": self.followers,
             "connections": self.connections,
+            "mutuals": self.mutual_connections if self.mutual_connections else 0,
             "premium": self.premium,
             "creator": self.creator,
             "influencer": self.influencer,
-            "profile_link": self.profile_link,
+            "bio": self.bio,
             "skills": (
                 [skill.to_dict() for skill in self.skills] if self.skills else None
             ),
@@ -117,13 +121,13 @@ class Staff(BaseModel):
                 if self.experiences
                 else None
             ),
+            "schools": (
+                [school.to_dict() for school in self.schools] if self.schools else None
+            ),
             "certifications": (
                 [cert.to_dict() for cert in self.certifications]
                 if self.certifications
                 else None
-            ),
-            "schools": (
-                [school.to_dict() for school in self.schools] if self.schools else None
             ),
             "profile_photo": self.profile_photo,
         }
