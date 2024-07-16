@@ -76,6 +76,7 @@ class Staff(BaseModel):
     first_name: str | None = None
     last_name: str | None = None
     potential_email: str | None = None
+    bio: str | None = None
     followers: int | None = None
     connections: int | None = None
     location: str | None = None
@@ -109,6 +110,7 @@ class Staff(BaseModel):
             "creator": self.creator,
             "influencer": self.influencer,
             "profile_link": self.profile_link,
+            "bio": self.bio,
             "skills": (
                 [skill.to_dict() for skill in self.skills] if self.skills else None
             ),

@@ -14,6 +14,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import staffspy.utils as utils
 from linkedin.certifications import CertificationFetcher
 from linkedin.employee import EmployeeFetcher
+from linkedin.employee_bio import EmployeeBioFetcher
 from linkedin.experiences import ExperiencesFetcher
 from linkedin.schools import SchoolsFetcher
 from linkedin.skills import SkillsFetcher
@@ -44,6 +45,7 @@ class LinkedInScraper:
         self.employees = EmployeeFetcher(self.session)
         self.schools = SchoolsFetcher(self.session)
         self.experiences = ExperiencesFetcher(self.session)
+        self.bio = EmployeeBioFetcher(self.session)
 
     def get_company_id(self, company_name):
         """Get the company id and staff count from the company name."""
@@ -232,6 +234,7 @@ class LinkedInScraper:
                 "certifications"
             )
             tasks[executor.submit(self.schools.fetch_schools, employee)] = "schools"
+            tasks[executor.submit(self.bio.fetch_employee_bio, employee)] = "bio"
 
             for future in as_completed(tasks):
                 result = future.result()

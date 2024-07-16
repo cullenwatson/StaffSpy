@@ -102,6 +102,7 @@ Staff
 ├── creator
 ├── premium
 |
+├── bio
 ├── profile_photo
 |
 ├── skills

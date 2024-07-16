@@ -74,3 +74,4 @@ class EmployeeFetcher:
         emp.influencer = emp_dict["influencer"]
         emp.creator = emp_dict["creator"]
         emp.premium = emp_dict["premium"]
+        pass
