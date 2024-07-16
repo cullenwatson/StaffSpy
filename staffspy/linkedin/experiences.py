@@ -1,7 +1,7 @@
 import json
 import logging
 
-import staffspy.utils
+import staffspy.utils as utils
 from staffspy.exceptions import TooManyRequests
 from staffspy.models import Experience
 
