@@ -1,4 +1,4 @@
-<img width="640" alt="3F662479-CCB8-40DF-B5C9-7D66B960BCEE" src="https://github.com/user-attachments/assets/6aac89ef-265e-485d-89f0-12068c8ff0b3">
+<img width="640" alt="3FAD4652-488F-4F6F-A744-4C2AA5855E92" src="https://github.com/user-attachments/assets/73b701ff-2db8-4d72-9ad3-42b7e1db537f">
 
 **StaffSpy** is a staff scraper library for LinkedIn.
 
