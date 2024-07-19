@@ -93,6 +93,7 @@ Staff
 ├── first_name
 ├── last_name
 ├── potential_email
+├── estimated_age
 |
 ├── followers
 ├── connections
