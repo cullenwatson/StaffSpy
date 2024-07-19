@@ -76,6 +76,7 @@ class Staff(BaseModel):
     first_name: str | None = None
     last_name: str | None = None
     potential_email: str | None = None
+    estimated_age: int | None = None
     bio: str | None = None
     followers: int | None = None
     connections: int | None = None
@@ -96,7 +97,6 @@ class Staff(BaseModel):
         return {
             "search_term": self.search_term,
             "id": self.id,
-            "profile_link": self.profile_link,
             "name": self.name,
             "position": self.position,
             "profile_id": self.profile_id,
@@ -106,12 +106,14 @@ class Staff(BaseModel):
             "company": self.company,
             "school": self.school,
             "location": self.location,
+            "estimated_age": self.estimated_age,
             "followers": self.followers,
             "connections": self.connections,
             "mutuals": self.mutual_connections if self.mutual_connections else 0,
             "premium": self.premium,
             "creator": self.creator,
             "influencer": self.influencer,
+            "profile_link": self.profile_link,
             "bio": self.bio,
             "skills": (
                 [skill.to_dict() for skill in self.skills] if self.skills else None
