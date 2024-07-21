@@ -100,8 +100,11 @@ Staff
 ├── mutual_connections
 |
 ├── location
-├── company
-├── school
+├── company_1
+├── company_2
+├── company_3
+├── school_1
+├── school_2
 |
 ├── influencer
 ├── creator
