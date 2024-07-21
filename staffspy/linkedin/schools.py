@@ -1,5 +1,8 @@
 import json
 import logging
+import re
+from datetime import datetime
+from math import inf
 
 from staffspy.exceptions import TooManyRequests
 from staffspy.models import School
@@ -39,7 +42,7 @@ class SchoolsFetcher:
             logger.debug(res_json)
             return False
 
-        staff.schools = self.parse_schools(elements)
+        staff.schools, staff.estimated_age = self.parse_schools(elements)
         return True
 
     def parse_schools(self, elements):
@@ -51,7 +54,6 @@ class SchoolsFetcher:
                 break
             years = entity["caption"]["text"] if entity["caption"] else None
             school_name = entity["titleV2"]["text"]["text"]
-
             if years:
                 start, end = parse_dates(years)
             degree = entity["subtitle"]["text"] if entity["subtitle"] else None
@@ -60,4 +62,8 @@ class SchoolsFetcher:
             )
             schools.append(school)
 
-        return schools
+        return (
+            (schools, person_age)
+            if person_age and person_age < inf
+            else (schools, None)
+        )

@@ -1,3 +1,5 @@
+<img width="640" alt="3FAD4652-488F-4F6F-A744-4C2AA5855E92" src="https://github.com/user-attachments/assets/73b701ff-2db8-4d72-9ad3-42b7e1db537f">
+
 **StaffSpy** is a staff scraper library for LinkedIn.
 
 ## Features
@@ -38,7 +40,7 @@ staff.to_csv(filename, index=False)
 ```
 A browser will open to sign in to LinkedIn on the first sign-in. Press enter after signing in to begin scraping.
 
-### Output
+### Partial Output
 | name           | position                                   | profile_id          | first_name | last_name | potential_email              | company | school                                         | location                                 | followers | connections | premium |
 |----------------|--------------------------------------------|---------------------|------------|-----------|------------------------------|---------|-----------------------------------------------|------------------------------------------|-----------|-------------|---------|
 | Andrei Gheorghe| Product Engineer                           | idevelop            | Andrei     | Gheorghe  | andrei.gheorghe@openai.com   | OpenAI  | Universitatea „Politehnica” din București    | London, England, United Kingdom           | 723       | 704         | FALSE   |
@@ -91,6 +93,7 @@ Staff
 ├── first_name
 ├── last_name
 ├── potential_email
+├── estimated_age
 |
 ├── followers
 ├── connections
