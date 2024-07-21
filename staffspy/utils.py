@@ -154,7 +154,6 @@ def parse_dates(date_str):
                 start_date = None
                 end_date = None
             else:
-                # Extract only the date part to avoid including time
                 start_date = parse(matches[0]).date()
                 end_date = None
         else:
