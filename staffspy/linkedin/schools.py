@@ -3,7 +3,7 @@ import logging
 
 from staffspy.exceptions import TooManyRequests
 from staffspy.models import School
-from utils import parse_dates
+from staffspy.utils import parse_dates
 
 logger = logging.getLogger(__name__)
 
