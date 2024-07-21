@@ -54,6 +54,7 @@ class ExperiencesFetcher:
                 ):
                     emp_type = None
                     duration = entity["caption"]["text"]
+                    start_date, end_date = utils.parse_dates(duration)
                     from_date, to_date = utils.parse_duration(duration)
                     if from_date:
                         duration = duration.split(" · ")[1]
@@ -71,8 +72,8 @@ class ExperiencesFetcher:
                         title=title,
                         company=company,
                         emp_type=emp_type,
-                        from_date=from_date,
-                        to_date=to_date,
+                        start_date=start_date,
+                        end_date=end_date,
                         location=location,
                     )
                     exps.append(exp)
@@ -100,6 +101,7 @@ class ExperiencesFetcher:
                 entity["subtitle"]["text"].lower() if entity["subtitle"] else None
             )
             location = entity["metadata"]["text"] if entity["metadata"] else None
+            start_date, end_date = utils.parse_dates(duration)
             from_date, to_date = utils.parse_duration(duration)
             if from_date:
                 duration = duration.split(" · ")[1]
@@ -108,8 +110,8 @@ class ExperiencesFetcher:
                 title=title,
                 company=company,
                 emp_type=emp_type,
-                from_date=from_date,
-                to_date=to_date,
+                start_date=start_date,
+                end_date=end_date,
                 location=location,
             )
             exps.append(exp)

@@ -6,6 +6,7 @@ from math import inf
 
 from staffspy.exceptions import TooManyRequests
 from staffspy.models import School
+from utils import parse_dates
 
 logger = logging.getLogger(__name__)
 
@@ -46,8 +47,7 @@ class SchoolsFetcher:
 
     def parse_schools(self, elements):
         schools = []
-        first_college_year = inf
-        person_age = None
+        start = end = None
         for elem in elements:
             entity = elem["components"]["entityComponent"]
             if not entity:
@@ -55,17 +55,10 @@ class SchoolsFetcher:
             years = entity["caption"]["text"] if entity["caption"] else None
             school_name = entity["titleV2"]["text"]["text"]
             if years:
-                if any(word in school_name.lower() for word in self.college_words):
-                    start_year_match = re.search(r"\d{4}", years)
-                    if start_year_match:
-                        start_year = int(start_year_match.group())
-                        first_college_year = min(first_college_year, start_year)
-                        person_age = 18 + (datetime.now().year - first_college_year)
+                start, end = parse_dates(years)
             degree = entity["subtitle"]["text"] if entity["subtitle"] else None
             school = School(
-                years=years,
-                school=school_name,
-                degree=degree,
+                start_date=start, end_date=end, school=school_name, degree=degree
             )
             schools.append(school)
 

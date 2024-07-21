@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "staffspy"
-version = "0.1.14"
+version = "0.1.15"
 description = "Staff scraper library for LinkedIn"
 authors = ["Cullen Watson <cullen@bunsly.com>"]
 readme = "README.md"
@@ -12,6 +12,7 @@ pydantic = "^2.7.2"
 pandas = "^2.2.2"
 requests = "^2.32.3"
 tldextract = "^5.1.2"
+python-dateutil = "^2.9.0.post0"
 
 
 [tool.poetry.group.dev.dependencies]
