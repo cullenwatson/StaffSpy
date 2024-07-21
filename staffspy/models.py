@@ -78,7 +78,6 @@ class Staff(BaseModel):
     first_name: str | None = None
     last_name: str | None = None
     potential_email: str | None = None
-    estimated_age: int | None = None
     bio: str | None = None
     followers: int | None = None
     connections: int | None = None
@@ -128,7 +127,6 @@ class Staff(BaseModel):
             "school_1": top_three_school_names[0],
             "school_2": top_three_school_names[1],
             "location": self.location,
-            "estimated_age": self.estimated_age,
             "followers": self.followers,
             "connections": self.connections,
             "mutuals": self.mutual_connections if self.mutual_connections else 0,
