@@ -2820,3 +2820,4 @@ browser = ["selenium"]
 lock-version = "2.0"
 python-versions = "^3.10"
 content-hash = "9881470fd88d51f96beb1051d74582ff2fcff30a2cffeaffcc966d5bd272fa5b"
+

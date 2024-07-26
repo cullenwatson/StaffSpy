@@ -1,9 +1,11 @@
 import logging
 import os
 import pickle
+import re
 import sys
 from datetime import datetime
 from urllib.parse import quote
+from dateutil.parser import parse
 
 import requests
 import tldextract
@@ -141,8 +143,7 @@ class Login:
 
         response = session.get(url)
         if response.status_code != 200:
-            logger.error(f"Error: {response.status_code} {response.text}")
-            return None
+            raise Exception(f"failed to begin auth process: {response.status_code} {response.text}")
         for cookie in session.cookies:
             if cookie.name == 'JSESSIONID':
                 jsession_value = cookie.value.split('ajax:')[1].strip('"')
@@ -265,3 +266,30 @@ def set_logger_level(verbose: int = 0):
         logger.setLevel(level)
     else:
         raise ValueError(f"Invalid log level: {level_name}")
+
+
+def parse_dates(date_str):
+    regex = r"(\b\w+ \d{4}|\b\d{4}|\bPresent)"
+    matches = re.findall(regex, date_str)
+
+    start_date, end_date = None, None
+    if matches:
+        if "Present" in matches:
+            if len(matches) == 1:
+                start_date = None
+                end_date = None
+            else:
+                start_date = parse(matches[0]).date()
+                end_date = None
+        else:
+            if len(matches) == 2:
+                start_date = parse(matches[0]).date()
+                end_date = parse(matches[1]).date()
+            elif len(matches) == 1:
+                start_date = parse(matches[0]).date()
+
+    return start_date, end_date
+
+
+if __name__ == "__main__":
+    p = parse_dates("May 2018 - Jun 2024")

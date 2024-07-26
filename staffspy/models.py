@@ -1,16 +1,18 @@
-from datetime import datetime
+from datetime import datetime, date
 
 from pydantic import BaseModel
 
 
 class School(BaseModel):
-    years: str | None = None
+    start_date: date | None = None
+    end_date: date | None = None
     school: str | None = None
     degree: str | None = None
 
     def to_dict(self):
         return {
-            "years": self.years,
+            "start_date": self.start_date.isoformat() if self.start_date else None,
+            "end_date": self.end_date.isoformat() if self.end_date else None,
             "school": self.school,
             "degree": self.degree,
         }
@@ -50,13 +52,13 @@ class Experience(BaseModel):
     company: str | None = None
     location: str | None = None
     emp_type: str | None = None
-    from_date: datetime | None = None
-    to_date: datetime | None = None
+    start_date: date | None = None
+    end_date: date | None = None
 
     def to_dict(self):
         return {
-            "from_date": self.from_date.strftime("%b %Y") if self.from_date else None,
-            "to_date": self.to_date.strftime("%b %Y") if self.to_date else None,
+            "start_date": self.start_date.isoformat() if self.start_date else None,
+            "end_date": self.end_date.isoformat() if self.end_date else None,
             "duration": self.duration,
             "title": self.title,
             "company": self.company,
@@ -76,8 +78,10 @@ class Staff(BaseModel):
     first_name: str | None = None
     last_name: str | None = None
     potential_email: str | None = None
+    bio: str | None = None
     followers: int | None = None
     connections: int | None = None
+    mutual_connections: int | None = None
     location: str | None = None
     company: str | None = None
     school: str | None = None
@@ -91,24 +95,46 @@ class Staff(BaseModel):
     schools: list[School] | None = None
 
     def to_dict(self):
+        sorted_schools = sorted(
+            self.schools, key=lambda x: (x.end_date is None, x.end_date), reverse=True
+        ) if self.schools else []
+
+        top_three_school_names = [school.school for school in sorted_schools[:3]]
+        top_three_school_names += [None] * (3 - len(top_three_school_names))
+        estimated_age = self.estimate_age_based_on_education()
+
+        sorted_experiences = sorted(
+            self.experiences,
+            key=lambda x: (x.end_date is None, x.end_date),
+            reverse=True,
+        ) if self.experiences else []
+        top_three_companies = [exp.company for exp in sorted_experiences[:3]]
+        top_three_companies += [None] * (3 - len(top_three_companies))
+
         return {
             "search_term": self.search_term,
             "id": self.id,
-            "name": self.name,
-            "position": self.position,
             "profile_id": self.profile_id,
+            "name": self.name,
             "first_name": self.first_name,
             "last_name": self.last_name,
+            "estimated_age": estimated_age,
             "potential_email": self.potential_email,
-            "company": self.company,
-            "school": self.school,
+            "position": self.position,
+            "company_1": top_three_companies[0],
+            "company_2": top_three_companies[1],
+            "company_3": top_three_companies[2],
+            "school_1": top_three_school_names[0],
+            "school_2": top_three_school_names[1],
             "location": self.location,
             "followers": self.followers,
             "connections": self.connections,
+            "mutuals": self.mutual_connections if self.mutual_connections else 0,
             "premium": self.premium,
             "creator": self.creator,
             "influencer": self.influencer,
             "profile_link": self.profile_link,
+            "bio": self.bio,
             "skills": (
                 [skill.to_dict() for skill in self.skills] if self.skills else None
             ),
@@ -117,13 +143,29 @@ class Staff(BaseModel):
                 if self.experiences
                 else None
             ),
+            "schools": (
+                [school.to_dict() for school in self.schools] if self.schools else None
+            ),
             "certifications": (
                 [cert.to_dict() for cert in self.certifications]
                 if self.certifications
                 else None
             ),
-            "schools": (
-                [school.to_dict() for school in self.schools] if self.schools else None
-            ),
             "profile_photo": self.profile_photo,
         }
+
+    def estimate_age_based_on_education(self):
+        college_words = ["uni", "college"]
+
+        sorted_schools = sorted(
+            [school for school in self.schools if school.start_date],
+            key=lambda x: x.start_date,
+        ) if self.schools else []
+
+        current_date = datetime.now().date()
+        for school in sorted_schools:
+            if any(word in school.school.lower() for word in college_words):
+                if school.start_date:
+                    years_in_education = (current_date - school.start_date).days // 365
+                    return int(18 + years_in_education)
+        return None
