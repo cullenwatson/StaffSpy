@@ -271,20 +271,6 @@ webencodings = "*"
 css = ["tinycss2 (>=1.1.0,<1.3)"]
 
 [[package]]
-name = "capsolver"
-version = "1.0.7"
-description = "capsolver python libary"
-optional = false
-python-versions = ">=3.6.8"
-files = [
-    {file = "capsolver-1.0.7-py3-none-any.whl", hash = "sha256:c0497cc55398741a00c84c34bbad5698a7e76b73787b568622a6ec4d319c5773"},
-    {file = "capsolver-1.0.7.tar.gz", hash = "sha256:e3ec645c8752becb2c861d357bbc0cc23c5716bd9073e1b9b1cc5ecc5ba1d21f"},
-]
-
-[package.dependencies]
-requests = ">=2.26.0"
-
-[[package]]
 name = "certifi"
 version = "2024.7.4"
 description = "Python package for providing Mozilla's CA Bundle."
@@ -2833,4 +2819,4 @@ browser = ["selenium"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "f62339af449991b0ff7e55e713a20354ba5d870d9b1f35e1cdc1c59ee8717ad3"
+content-hash = "9881470fd88d51f96beb1051d74582ff2fcff30a2cffeaffcc966d5bd272fa5b"

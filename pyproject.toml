@@ -12,7 +12,6 @@ pandas = "^2.2.2"
 requests = "^2.32.3"
 tldextract = "^5.1.2"
 selenium = { version = "^4.3.0", optional = true }
-capsolver = "^1.0.7"
 tenacity = "^8.5.0"
 
 [tool.poetry.extras]
