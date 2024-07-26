@@ -20,8 +20,8 @@ class LinkedInScraper:
     schools_ep = "https://www.linkedin.com/voyager/api/graphql?queryId=voyagerIdentityDashProfileComponents.277ba7d7b9afffb04683953cede751fb&queryName=ProfileComponentsBySectionType&variables=(tabIndex:0,sectionType:education,profileUrn:urn%3Ali%3Afsd_profile%3A{employee_id},count:50)"
     urn_ep = "https://www.linkedin.com/voyager/api/graphql?queryId=voyagerSearchDashReusableTypeahead.57a4fa1dd92d3266ed968fdbab2d7bf5&queryName=SearchReusableTypeaheadByType&variables=(query:(showFullLastNameForConnections:false,typeaheadFilterQuery:(geoSearchTypes:List(MARKET_AREA,COUNTRY_REGION,ADMIN_DIVISION_1,CITY))),keywords:{location},type:GEO,start:0)"
 
-    def __init__(self, session_file, username, password):
-        self.session = utils.load_session(session_file, username, password)
+    def __init__(self, session_file, username: str, password: str, capsolver_api_key: str):
+        self.session = utils.load_session(session_file, username, password, capsolver_api_key)
         self.company_id = self.staff_count = self.num_staff = self.company_name = (
             self.domain
         ) = self.max_results = self.search_term = self.location = None

@@ -7,8 +7,9 @@ from urllib.parse import quote
 
 import requests
 import tldextract
-from selenium import webdriver
-from selenium.common.exceptions import WebDriverException
+from bs4 import BeautifulSoup
+
+from staffspy.capsolver import capsolver
 
 logger = logging.getLogger("StaffSpy")
 logger.propagate = False
@@ -40,6 +41,12 @@ def create_email(first, last, domain):
 
 
 def get_webdriver():
+    try:
+        from selenium import webdriver
+        from selenium.common.exceptions import WebDriverException
+    except ImportError as e:
+        raise Exception('install package `pip install staffspy[browser]` to login with browser')
+
     for browser in [webdriver.Chrome, webdriver.Firefox]:
         try:
             return browser()
@@ -48,73 +55,149 @@ def get_webdriver():
     return None
 
 
-def login():
-    driver = get_webdriver()
+class Login:
 
-    if driver is None:
-        logger.debug("No browser found for selenium")
-        sys.exit(1)
+    def __init__(self, username,password, capsolver_api_key):
+        self.username,self.password,self.capsolver_api_key=username,password,capsolver_api_key
 
-    driver.get("https://linkedin.com/login")
-    input("Press enter after logged in")
+    def solve_captcha(self, session,data,payload):
+        url=data['challenge_url']
+        r=session.post(url, data=payload)
 
-    selenium_cookies = driver.get_cookies()
-    driver.quit()
+        soup = BeautifulSoup(r.text, 'html.parser')
 
-    session = requests.Session()
-    for cookie in selenium_cookies:
-        session.cookies.set(cookie["name"], cookie["value"])
+        code_tag = soup.find('code', id='securedDataExchange')
 
-    user_agent = "Mozilla/5.0 (Linux; U; Android 4.4.2; en-us; SCH-I535 Build/KOT49H) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30"
-    session.headers.update(
-        {
-            "User-Agent": user_agent,
-            "X-RestLi-Protocol-Version": "2.0.0",
-            "X-Li-Track": '{"clientVersion":"1.13.1665"}',
+        if code_tag:
+            comment = code_tag.contents[0]
+            extracted_code = str(comment).strip("<!--\"\"-->").strip()
+            logger.debug("Extracted captcha blob:", extracted_code)
+        else:
+            raise Exception('blob to solve captcha not found')
+
+        token = capsolver(extracted_code,self.capsolver_api_key)
+        if not token:
+            raise Exception('no token')
+
+        captcha_site_key = soup.find('input', {'name': 'captchaSiteKey'})['value']
+        challenge_id = soup.find('input', {'name': 'challengeId'})['value']
+        challenge_data = soup.find('input', {'name': 'challengeData'})['value']
+        challenge_details = soup.find('input', {'name': 'challengeDetails'})['value']
+        challenge_type = soup.find('input', {'name': 'challengeType'})['value']
+        challenge_source = soup.find('input', {'name': 'challengeSource'})['value']
+        request_submission_id = soup.find('input', {'name': 'requestSubmissionId'})['value']
+        display_time = soup.find('input', {'name': 'displayTime'})['value']
+        page_instance = soup.find('input', {'name': 'pageInstance'})['value']
+        failure_redirect_uri = soup.find('input', {'name': 'failureRedirectUri'})['value']
+        sign_in_link = soup.find('input', {'name': 'signInLink'})['value']
+        join_now_link = soup.find('input', {'name': 'joinNowLink'})['value']
+        for cookie in session.cookies:
+            if cookie.name == 'JSESSIONID':
+                jsession_value = cookie.value.split('ajax:')[1].strip('"')
+                break
+        else:
+            raise Exception('jsessionid not found, raise issue on GitHub')
+        csrf_token=f"ajax:{jsession_value}"
+        payload = {
+            "csrfToken":csrf_token,
+            "captchaSiteKey":captcha_site_key,
+            "challengeId":challenge_id,
+            "language":"en-US",
+            "displayTime":display_time,
+            "challengeType":challenge_type,
+            "challengeSource":challenge_source,
+            "requestSubmissionId":request_submission_id,
+            "captchaUserResponseToken":token,
+            "challengeData":challenge_data,
+            "pageInstance":page_instance,
+            "challengeDetails":challenge_details,
+            "failureRedirectUri":failure_redirect_uri,
+            "signInLink":sign_in_link,
+            "joinNowLink":join_now_link,
+            "_s":"CONSUMER_LOGIN"
         }
-    )
+        encoded_payload = {key: f'{quote(str(value), "")}' for key, value in payload.items()}
+        query_string = '&'.join([f'{key}={value}' for key, value in encoded_payload.items()])
+        response=session.post("https://www.linkedin.com/checkpoint/challenge/verify", data=query_string)
+        pass
 
-    session = set_csrf_token(session)
-    return session
+        if not response.ok:
+            raise Exception(f'verify captcha failed {response.text[:200]}')
 
+    def login_requests(self):
 
-def login_requests(username, password):
+        url = "https://www.linkedin.com/uas/authenticate"
 
-    url = "https://www.linkedin.com/uas/authenticate"
-
-    encoded_username = quote(username)
-    encoded_password = quote(password)
-    payload = f"session_key={encoded_username}&session_password={encoded_password}&lang=v%3D2%26lang%3Den-US"
-    headers = {
-        "Host": "www.linkedin.com",
-        "content-type": "application/x-www-form-urlencoded",
-        "accept": "*/*",
-        "x-li-lang": "en-US",
-        "accept-language": "en-US,en;q=0.9",
-        "x-restli-protocol-version": "2.0.0",
-        "x-li-user-agent": "LIAuthLibrary:44.0.* com.linkedin.LinkedIn:9.29.8962 iPhone:17.5.1",
-        "user-agent": "LinkedIn/9.29.8962 CFNetwork/1496.0.7 Darwin/23.5.0",
-    }
-
-    response = requests.post(url, headers=headers, data=payload)
-    if response.status_code != 200:
-        logger.error(f"Error: {response.status_code} {response.text}")
-        return None
-    session = requests.Session()
-    for cookie in response.cookies:
-        session.cookies.set(cookie.name, cookie.value)
-
-    user_agent = "Mozilla/5.0 (Linux; U; Android 4.4.2; en-us; SCH-I535 Build/KOT49H) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30"
-    session.headers.update(
-        {
-            "User-Agent": user_agent,
-            "X-RestLi-Protocol-Version": "2.0.0",
-            "X-Li-Track": '{"clientVersion":"1.13.1665"}',
+        encoded_username = quote(self.username)
+        encoded_password = quote(self.password)
+        session = requests.Session()
+        session.headers = {
+            "X-Li-User-Agent": "LIAuthLibrary:44.0.* com.linkedin.LinkedIn:9.29.8962 iPhone:17.5.1",
+            "User-Agent": "LinkedIn/9.29.8962 CFNetwork/1496.0.7 Darwin/23.5.0",
+            "X-User-Language": "en",
+            "X-User-Locale": "en_US",
+            "Accept-Language": "en-us",
         }
-    )
 
-    session = set_csrf_token(session)
-    return session
+        response = session.get(url)
+        if response.status_code != 200:
+            logger.error(f"Error: {response.status_code} {response.text}")
+            return None
+        for cookie in session.cookies:
+            if cookie.name == 'JSESSIONID':
+                jsession_value = cookie.value.split('ajax:')[1].strip('"')
+                break
+        else:
+            raise Exception('jsessionid not found, raise issue on GitHub')
+        session.headers['content-type'] = "application/x-www-form-urlencoded"
+        csrf_token=f"ajax%3A{jsession_value}"
+        payload = f"session_key={encoded_username}&session_password={encoded_password}&JSESSIONID=%22{csrf_token}%22"
+        response = session.post(url, data=payload)
+        data=response.json()
+
+        if data['login_result']=='CHALLENGE':
+            self.solve_captcha(session,data,payload)
+
+        session.headers.update(
+            {
+                "User-Agent": "Mozilla/5.0 (Linux; U; Android 4.4.2; en-us; SCH-I535 Build/KOT49H) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30",
+                "X-RestLi-Protocol-Version": "2.0.0",
+                "X-Li-Track": '{"clientVersion":"1.13.1665"}',
+            }
+        )
+
+        session = set_csrf_token(session)
+        return session
+
+    def login_browser(self):
+        """Backup login method"""
+        driver = get_webdriver()
+
+        if driver is None:
+            logger.debug("No browser found for selenium")
+            sys.exit(1)
+
+        driver.get("https://linkedin.com/login")
+        input("Press enter after logged in")
+
+        selenium_cookies = driver.get_cookies()
+        driver.quit()
+
+        session = requests.Session()
+        for cookie in selenium_cookies:
+            session.cookies.set(cookie["name"], cookie["value"])
+
+        user_agent = "Mozilla/5.0 (Linux; U; Android 4.4.2; en-us; SCH-I535 Build/KOT49H) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30"
+        session.headers.update(
+            {
+                "User-Agent": user_agent,
+                "X-RestLi-Protocol-Version": "2.0.0",
+                "X-Li-Track": '{"clientVersion":"1.13.1665"}',
+            }
+        )
+
+        session = set_csrf_token(session)
+        return session
 
 
 def save_session(session, session_file):
@@ -123,14 +206,15 @@ def save_session(session, session_file):
         pickle.dump(data, f)
 
 
-def load_session(session_file, username, password):
+def load_session(session_file, username: str, password: str, capsolver_api_key: str):
+    login_obj=Login(username,password,capsolver_api_key)
     if not session_file or not os.path.exists(session_file):
         if username and password:
-            session = login_requests(username, password)
+            session = login_obj.login_requests()
         else:
-            session = login()
+            session = login_obj.login_browser()
         if not session:
-            sys.exit("Failed to log in.")
+            raise Exception("Failed to log in.")
         if session_file:
             save_session(session, session_file)
     else:

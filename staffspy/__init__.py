@@ -16,10 +16,11 @@ def scrape_staff(
     log_level: int = 0,
     username: str = None,
     password: str = None,
+    capsolver_api_key: str = None
 ) -> pd.DataFrame:
     set_logger_level(log_level)
 
-    li = LinkedInScraper(session_file, username, password)
+    li = LinkedInScraper(session_file, username, password, capsolver_api_key)
 
     staff = li.scrape_staff(
         company_name=company_name,
