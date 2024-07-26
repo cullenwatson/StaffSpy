@@ -125,7 +125,7 @@ Staff
 |
 ├── followers
 ├── connections
-├── mutual_connections
+├── mutuals_count
 |
 ├── location
 ├── company_1
