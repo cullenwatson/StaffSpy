@@ -28,7 +28,7 @@ def capsolver(blob_data: str, api_key: str):
     resp = res.json()
     task_id = resp.get("taskId")
     if not task_id:
-        logger.info("Failed to create task:", res.text)
+        logger.info(f"Failed to create task: {res.text}")
         return None
     logger.info(f"Got captcha solver taskId: {task_id} / Getting result...")
 
@@ -41,5 +41,5 @@ def capsolver(blob_data: str, api_key: str):
         if status == "ready":
             return resp.get("solution", {}).get('token')
         if status == "failed" or resp.get("errorId"):
-            logger.info("Captcha solve failed! response:", res.text)
+            logger.info(f"Captcha solve failed! response: {res.text}")
             return None

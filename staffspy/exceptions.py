@@ -11,3 +11,6 @@ class BadCookies(RequestException):
 
 class GeoUrnNotFound(RequestException):
     """Could not find geo urn for given location."""
+
+class BlobException(Exception):
+    pass

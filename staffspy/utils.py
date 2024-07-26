@@ -10,8 +10,10 @@ from dateutil.parser import parse
 import requests
 import tldextract
 from bs4 import BeautifulSoup
+from tenacity import stop_after_attempt, retry_if_exception_type, retry, RetryError
 
 from staffspy.capsolver import capsolver
+from staffspy.exceptions import BlobException
 
 logger = logging.getLogger("StaffSpy")
 logger.propagate = False
@@ -70,13 +72,16 @@ class Login:
 
         code_tag = soup.find('code', id='securedDataExchange')
 
+        logger.info('Searching for capcha blob in linkedin to begin captcha solving')
         if code_tag:
             comment = code_tag.contents[0]
             extracted_code = str(comment).strip("<!--\"\"-->").strip()
             logger.debug("Extracted captcha blob:", extracted_code)
         else:
-            raise Exception('blob to solve captcha not found')
+            raise BlobException('blob to solve captcha not found - rerunning the program usually solves this')
 
+        if not self.capsolver_api_key:
+            raise Exception('captcha hit - provide CapSolver API key to solve or switch to the browser-based login with `pip install staffspy[browser]`')
         token = capsolver(extracted_code,self.capsolver_api_key)
         if not token:
             raise Exception('failed to solve captcha after 10 attempts')
@@ -121,11 +126,11 @@ class Login:
         encoded_payload = {key: f'{quote(str(value), "")}' for key, value in payload.items()}
         query_string = '&'.join([f'{key}={value}' for key, value in encoded_payload.items()])
         response=session.post("https://www.linkedin.com/checkpoint/challenge/verify", data=query_string)
-        pass
 
         if not response.ok:
             raise Exception(f'verify captcha failed {response.text[:200]}')
 
+    @retry(stop=stop_after_attempt(5), retry=retry_if_exception_type(BlobException))
     def login_requests(self):
 
         url = "https://www.linkedin.com/uas/authenticate"
@@ -208,10 +213,14 @@ def save_session(session, session_file):
 
 
 def load_session(session_file, username: str, password: str, capsolver_api_key: str):
+    session=None
     login_obj=Login(username,password,capsolver_api_key)
     if not session_file or not os.path.exists(session_file):
         if username and password:
-            session = login_obj.login_requests()
+            try:
+                session = login_obj.login_requests()
+            except RetryError as retry_err:
+                retry_err.reraise()
         else:
             session = login_obj.login_browser()
         if not session:
