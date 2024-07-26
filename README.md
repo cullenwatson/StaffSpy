@@ -113,13 +113,14 @@ Staff
 ├── search_term
 ├── id
 ├── name
+├── first_name
+├── last_name
+├── location
 ├── bio
 |
 ├── position
 ├── profile_id
 ├── profile_link
-├── first_name
-├── last_name
 ├── potential_email
 ├── estimated_age
 |
@@ -127,12 +128,14 @@ Staff
 ├── connections
 ├── mutuals_count
 |
-├── location
 ├── company_1
 ├── company_2
 ├── company_3
 ├── school_1
 ├── school_2
+├── skill_1
+├── skill_2
+├── skill_3
 |
 ├── influencer
 ├── creator

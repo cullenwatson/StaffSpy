@@ -58,8 +58,8 @@ class EmployeeFetcher:
 
         emp.profile_photo = profile_photo
         emp.first_name = emp_dict["firstName"]
-        emp.last_name = emp_dict["lastName"]
-        emp.potential_email = utils.create_email(
+        emp.last_name = emp_dict["lastName"].split(',')[0]
+        emp.potential_emails = utils.create_emails(
             emp.first_name, emp.last_name, self.domain
         )
 
@@ -75,6 +75,7 @@ class EmployeeFetcher:
         emp.influencer = emp_dict["influencer"]
         emp.creator = emp_dict["creator"]
         emp.premium = emp_dict["premium"]
+        emp.mutual_connections = 0
         try:
             profile_insight = emp_dict["profileInsight"]["elements"]
             if profile_insight:
@@ -87,5 +88,4 @@ class EmployeeFetcher:
                         2 if " and " in mutual_connections_str else 1
                     )
         except:
-            emp.mutual_connections = None
-        pass
+            pass

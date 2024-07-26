@@ -36,6 +36,7 @@ class SkillsFetcher:
         return True
 
     def parse_skills(self, sections):
+        names=set()
         skills = []
         for section in sections:
             elems = section["subComponent"]["components"]["pagedListComponent"][
@@ -43,7 +44,10 @@ class SkillsFetcher:
             ]["elements"]
             for elem in elems:
                 entity = elem["components"]["entityComponent"]
-                skill = entity["titleV2"]["text"]["text"]
+                name = entity["titleV2"]["text"]["text"]
+                if name in names:
+                    continue
+                names.add(name)
                 try:
                     endorsements = int(
                         entity["subComponents"]["components"][0]["components"][
@@ -51,6 +55,6 @@ class SkillsFetcher:
                         ]["text"]["text"]["text"].replace(" endorsements", "")
                     )
                 except:
-                    endorsements = None
-                skills.append(Skill(name=skill, endorsements=endorsements))
+                    endorsements = 0
+                skills.append(Skill(name=name, endorsements=endorsements))
         return skills
