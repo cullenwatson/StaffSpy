@@ -31,7 +31,7 @@ staff = scrape_staff(
     location="london", # optional
     extra_profile_data=True, # fetch all past experiences, schools, & skills
     
-    # login credentials (remove for browser)
+    # login credentials (remove to sign in with browser)
     username="myemail@gmail.com",
     password="mypassword",
     capsolver_api_key="CAP-6D6A8CE981803A309A0D531F8B4790BC", # in case hit with captcha on sign-in
