@@ -121,7 +121,7 @@ Staff
 ├── position
 ├── profile_id
 ├── profile_link
-├── potential_email
+├── potential_emails
 ├── estimated_age
 |
 ├── followers
