@@ -77,7 +77,7 @@ class Login:
 
         token = capsolver(extracted_code,self.capsolver_api_key)
         if not token:
-            raise Exception('no token')
+            raise Exception('failed to solve captcha after 10 attempts')
 
         captcha_site_key = soup.find('input', {'name': 'captchaSiteKey'})['value']
         challenge_id = soup.find('input', {'name': 'challengeId'})['value']
