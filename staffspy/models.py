@@ -97,7 +97,7 @@ class Staff(BaseModel):
     def to_dict(self):
         sorted_schools = sorted(
             self.schools, key=lambda x: (x.end_date is None, x.end_date), reverse=True
-        )
+        ) if self.schools else []
 
         top_three_school_names = [school.school for school in sorted_schools[:3]]
         top_three_school_names += [None] * (3 - len(top_three_school_names))
@@ -107,7 +107,7 @@ class Staff(BaseModel):
             self.experiences,
             key=lambda x: (x.end_date is None, x.end_date),
             reverse=True,
-        )
+        ) if self.experiences else []
         top_three_companies = [exp.company for exp in sorted_experiences[:3]]
         top_three_companies += [None] * (3 - len(top_three_companies))
 
@@ -160,7 +160,7 @@ class Staff(BaseModel):
         sorted_schools = sorted(
             [school for school in self.schools if school.start_date],
             key=lambda x: x.start_date,
-        )
+        ) if self.schools else []
 
         current_date = datetime.now().date()
         for school in sorted_schools:

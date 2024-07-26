@@ -28,8 +28,8 @@ class LinkedInScraper:
     company_id_ep = "https://www.linkedin.com/voyager/api/organization/companies?q=universalName&universalName="
     location_id_ep = "https://www.linkedin.com/voyager/api/graphql?queryId=voyagerSearchDashReusableTypeahead.57a4fa1dd92d3266ed968fdbab2d7bf5&queryName=SearchReusableTypeaheadByType&variables=(query:(showFullLastNameForConnections:false,typeaheadFilterQuery:(geoSearchTypes:List(MARKET_AREA,COUNTRY_REGION,ADMIN_DIVISION_1,CITY))),keywords:{location},type:GEO,start:0)"
 
-    def __init__(self, session_file):
-        self.session = utils.load_session(session_file)
+    def __init__(self, session_file, username, password, capsolver_api_key):
+        self.session = utils.load_session(session_file, username, password, capsolver_api_key)
         (
             self.company_id,
             self.staff_count,
