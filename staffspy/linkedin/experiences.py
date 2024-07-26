@@ -52,12 +52,13 @@ class ExperiencesFetcher:
                         "pagedListComponent"
                     ]
                 ):
-                    emp_type = None
-                    duration = entity["caption"]["text"]
-                    start_date, end_date = utils.parse_dates(duration)
-                    from_date, to_date = utils.parse_duration(duration)
-                    if from_date:
-                        duration = duration.split(" · ")[1]
+                    emp_type = start_date=end_date=None
+                    duration = entity["caption"]["text"] if entity['caption'] else None
+                    if duration:
+                        start_date, end_date = utils.parse_dates(duration)
+                        from_date, to_date = utils.parse_duration(duration)
+                        if from_date:
+                            duration = duration.split(" · ")[1]
                     company = entity["subtitle"]["text"] if entity["subtitle"] else None
                     title = entity["titleV2"]["text"]["text"]
                     location = (

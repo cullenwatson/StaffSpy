@@ -77,7 +77,7 @@ class Staff(BaseModel):
     profile_link: str | None = None
     first_name: str | None = None
     last_name: str | None = None
-    potential_email: str | None = None
+    potential_emails: list | None = None
     bio: str | None = None
     followers: int | None = None
     connections: int | None = None
@@ -94,6 +94,14 @@ class Staff(BaseModel):
     certifications: list[Certification] | None = None
     schools: list[School] | None = None
 
+    def get_top_skills(self):
+        top_three_skills = []
+        if self.skills:
+            sorted_skills = sorted(self.skills, key=lambda x: x.endorsements, reverse=True)
+            top_three_skills = [skill.name for skill in sorted_skills[:3]]
+        top_three_skills += [None] * (3 - len(top_three_skills))
+        return top_three_skills
+
     def to_dict(self):
         sorted_schools = sorted(
             self.schools, key=lambda x: (x.end_date is None, x.end_date), reverse=True
@@ -106,10 +114,20 @@ class Staff(BaseModel):
         sorted_experiences = sorted(
             self.experiences,
             key=lambda x: (x.end_date is None, x.end_date),
-            reverse=True,
+            reverse=True
         ) if self.experiences else []
-        top_three_companies = [exp.company for exp in sorted_experiences[:3]]
+
+        top_three_companies = []
+        seen_companies = set()
+        for exp in sorted_experiences:
+            if exp.company not in seen_companies:
+                top_three_companies.append(exp.company)
+                seen_companies.add(exp.company)
+            if len(top_three_companies) == 3:
+                break
+
         top_three_companies += [None] * (3 - len(top_three_companies))
+        top_three_skills=self.get_top_skills()
 
         return {
             "search_term": self.search_term,
@@ -118,26 +136,26 @@ class Staff(BaseModel):
             "name": self.name,
             "first_name": self.first_name,
             "last_name": self.last_name,
+            "location": self.location,
             "estimated_age": estimated_age,
-            "potential_email": self.potential_email,
+            "potential_emails": ', '.join(self.potential_emails) if self.potential_emails else None,
             "position": self.position,
+            "followers": self.followers,
+            "connections": self.connections,
+            "mutuals": self.mutual_connections,
+            "premium": self.premium,
+            "creator": self.creator,
+            "influencer": self.influencer,
             "company_1": top_three_companies[0],
             "company_2": top_three_companies[1],
             "company_3": top_three_companies[2],
             "school_1": top_three_school_names[0],
             "school_2": top_three_school_names[1],
-            "location": self.location,
-            "followers": self.followers,
-            "connections": self.connections,
-            "mutuals": self.mutual_connections if self.mutual_connections else 0,
-            "premium": self.premium,
-            "creator": self.creator,
-            "influencer": self.influencer,
+            "skill_1": top_three_skills[0],
+            "skill_2": top_three_skills[1],
+            "skill_3": top_three_skills[2],
             "profile_link": self.profile_link,
             "bio": self.bio,
-            "skills": (
-                [skill.to_dict() for skill in self.skills] if self.skills else None
-            ),
             "experiences": (
                 [exp.to_dict() for exp in self.experiences]
                 if self.experiences
@@ -145,6 +163,9 @@ class Staff(BaseModel):
             ),
             "schools": (
                 [school.to_dict() for school in self.schools] if self.schools else None
+            ),
+            "skills": (
+                [skill.to_dict() for skill in self.skills] if self.skills else None
             ),
             "certifications": (
                 [cert.to_dict() for cert in self.certifications]
@@ -155,6 +176,7 @@ class Staff(BaseModel):
         }
 
     def estimate_age_based_on_education(self):
+        """Adds 18 to their first college start date"""
         college_words = ["uni", "college"]
 
         sorted_schools = sorted(
@@ -164,7 +186,7 @@ class Staff(BaseModel):
 
         current_date = datetime.now().date()
         for school in sorted_schools:
-            if any(word in school.school.lower() for word in college_words):
+            if any(word in school.school.lower() for word in college_words) or school.degree:
                 if school.start_date:
                     years_in_education = (current_date - school.start_date).days // 365
                     return int(18 + years_in_education)

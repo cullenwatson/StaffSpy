@@ -38,10 +38,11 @@ def extract_base_domain(url: str):
     return base_domain
 
 
-def create_email(first, last, domain):
-    first = "".join(filter(str.isalpha, first))
-    last = "".join(filter(str.isalpha, last))
-    return f"{first.lower()}.{last.lower()}@{domain}"
+def create_emails(first, last, domain):
+    first = "".join(filter(str.isalpha, first)).lower()
+    last = "".join(filter(str.isalpha, last)).lower()
+    emails = [f"{first}.{last}@{domain}", f"{first[0]}{last}@{domain}"]
+    return emails
 
 
 def get_webdriver():
