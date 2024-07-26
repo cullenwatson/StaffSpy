@@ -30,15 +30,33 @@ staff = scrape_staff(
     search_term="software engineer", # optional
     location="london", # optional
     extra_profile_data=True, # fetch all past experiences, schools, & skills
+    
+    username="myemail@gmail.com",
+    password="mypassword",
+    capsolver_api_key="CAP-6D6A8CE981803A309A0D531F8B4790BC",
+    
 
     max_results=50, # can go up to 1000
-    session_file=str(session_file), # save browser cookies
+    session_file=str(session_file), # save log in cookies to only log in once
     log_level=1,
 )
 filename = f"staff.csv"
 staff.to_csv(filename, index=False)
 ```
-A browser will open to sign in to LinkedIn on the first sign-in. Press enter after signing in to begin scraping.
+
+### Two login methods
+
+#### Requests login
+If you pass in a ```username``` & ```password```, it will sign in via LinkedIn api. If hit with a captcha, you need to pass ```capsolver_api_key```.
+
+
+#### Browser login
+
+If that fails or you rather use a browser, install the browser add-on to StaffSpy .
+
+```pip install staffspy[browser]```
+
+Do not pass the ```username``` & ```password``` params, then a browser will open to sign in to LinkedIn on the first sign-in. Press enter after signing in to begin scraping.
 
 ### Partial Output
 | name           | position                                   | profile_id          | first_name | last_name | potential_email              | company | school                                         | location                                 | followers | connections | premium |
@@ -73,6 +91,15 @@ Optional
 ├── session_file (str): 
 |    file path to save session cookies, so only one manual login is needed.
 |    can use mult profiles this way
+│
+├── username (str): 
+|    linkedin account email
+│
+├── password (str): 
+|    linkedin account password
+|
+├── capsolver_api_key (str): 
+|    solves the captcha using capsolver.com if hit with captcha on login
 │
 ├── log_level (int): 
 |    Controls the verbosity of the runtime printouts 
