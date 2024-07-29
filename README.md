@@ -27,8 +27,8 @@ session_file = Path(__file__).resolve().parent / "session.pkl"
 
 staff = scrape_staff(
     company_name="openai",
-    search_term="software engineer", # optional
-    location="london", # optional
+    search_term="software engineer",
+    location="london",
     extra_profile_data=True, # fetch all past experiences, schools, & skills
     
     # login credentials (remove these to sign in with browser)
@@ -39,7 +39,7 @@ staff = scrape_staff(
 
     max_results=50, # can go up to 1000
     session_file=str(session_file), # save login cookies to only log in once (lasts a week or so)
-    log_level=1,
+    log_level=1, # 0 for no logs
 )
 filename = f"staff.csv"
 staff.to_csv(filename, index=False)
@@ -60,18 +60,21 @@ If that fails or you rather use a browser, install the browser add-on to StaffSp
 Do not pass the ```username``` & ```password``` params, then a browser will open to sign in to LinkedIn on the first sign-in. Press enter after signing in to begin scraping.
 
 ### Partial Output
-| name           | position                                   | profile_id          | first_name | last_name | potential_email              | company | school                                         | location                                 | followers | connections | premium |
-|----------------|--------------------------------------------|---------------------|------------|-----------|------------------------------|---------|-----------------------------------------------|------------------------------------------|-----------|-------------|---------|
-| Andrei Gheorghe| Product Engineer                           | idevelop            | Andrei     | Gheorghe  | andrei.gheorghe@openai.com   | OpenAI  | Universitatea „Politehnica” din București    | London, England, United Kingdom           | 723       | 704         | FALSE   |
-| Douglas Li     | @ OpenAI UK, previously at Meta            | dougli              | Douglas    | Li        | douglas.li@openai.com        | OpenAI  | Washington University in St. Louis          | London, England, United Kingdom           | 533       | 401         | TRUE    |
-| Javier Sierra  | Software Engineer                          | javiersierra2102    | Javier     | Sierra    | javier.sierra@openai.com     | OpenAI  | Hult International Business School          | London, England, United Kingdom           | 726       | 717         | FALSE   |
+### Partial Output
+| profile_id     | name          | first_name | last_name | location                                 | age | position                                   | followers | connections | premium | company | past_company1 | past_company2 | school                                         | extra_school                   | skill1    | skill2      | skill3     | is_connection | premium | creator | potential_email                               | profile_link                                | profile_photo |
+|----------------|---------------|------------|-----------|------------------------------------------|-----|--------------------------------------------|-----------|-------------|---------|---------|---------------|---------------|-----------------------------------------------|-------------------------------|-----------|-------------|------------|---------------|----------|---------|----------------------------------------------|---------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|
+| javiersierra2102 | Javier Sierra | Javier     | Sierra    | London, England, United Kingdom           | 39  | Software Engineer                          | 735       | 725         | FALSE   | OpenAI  | Meta           | Oculus VR     | Hult International Business School            | Universidad Simón Bolívar     | Java      | JavaScript  | C++        | FALSE         | FALSE    | FALSE   | javier.sierra@openai.com, jsierra@openai.com | https://www.linkedin.com/in/javiersierra2102 | https://media.licdn.com/dms/image/C4D03AQHEyUg1kGT08Q/profile-displayphoto-shrink_800_800/0/1516504680512?e=1727913600&v=beta&t=3enCmNDBtJ7LxfbW6j1hDD8qNtHjO2jb2XTONECxUXw |
+| dougli          | Douglas Li    | Douglas    | Li        | London, England, United Kingdom           | 37  | @ OpenAI UK, previously at Meta            | 583       | 401         | FALSE   | OpenAI  | Shift Lab      | Facebook      | Washington University in St. Louis            |                               | Java      | Python      | JavaScript | FALSE         | TRUE     | FALSE   | douglas.li@openai.com, dli@openai.com        | https://www.linkedin.com/in/dougli           | https://media.licdn.com/dms/image/D4E03AQETmRyb3_GB8A/profile-displayphoto-shrink_800_800/0/1687996628597?e=1727913600&v=beta&t=HRYGJ4RxsTMcPF1YcSikXlbz99hx353csho3PWT6fOQ |
+| nkartashov      | Nick Kartashov| Nick       | Kartashov | London, England, United Kingdom           | 33  | Software Engineer                          | 2186      | 2182        | TRUE    | OpenAI  | Google         | DeepMind      | St. Petersburg Academic University            | Bioinformatics Institute      | Teamwork  | Java        | Haskell    | FALSE         | FALSE    | FALSE   | nick.kartashov@openai.com, nkartashov@openai.com | https://www.linkedin.com/in/nkartashov      | https://media.licdn.com/dms/image/D4E03AQEjOKxC5UgwWw/profile-displayphoto-shrink_800_800/0/1680706122689?e=1727913600&v=beta&t=m-JnG9nm0zxp1Z7njnInwbCoXyqa3AN-vJZntLfbzQ4 |
+
+
 
 
 ### Parameters for `scrape_staff()`
 
 ```plaintext
 ├── company_name (str): 
-|    company identifier on linkedin 
+|    company identifier on linkedin, will search for that company if that company id does not exist
 |    e.g. openai from https://www.linkedin.com/company/openai
 
 Optional 
@@ -128,14 +131,14 @@ Staff
 ├── connections
 ├── mutuals_count
 |
-├── company_1
-├── company_2
-├── company_3
-├── school_1
-├── school_2
-├── skill_1
-├── skill_2
-├── skill_3
+├── company
+├── past_company1
+├── past_company2
+├── school
+├── extra_school
+├── top_skill_1
+├── top_skill_2
+├── top_skill_1
 |
 ├── influencer
 ├── creator
@@ -164,11 +167,9 @@ Staff
     ├── school
     └── degree
 ```
-```
-└── LinkedIn notes:
-|    - only 1000 max results per search
-|    - extra_profile_data increases runtime by O(n)
-```
+### LinkedIn notes
+    - only 1000 max results per search
+    - extra_profile_data increases runtime by O(n)
 
 ## Frequently Asked Questions
 
