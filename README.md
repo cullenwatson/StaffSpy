@@ -176,7 +176,6 @@ Staff
     ├── years
     ├── school
     └── degree
-
 ```
 ### LinkedIn notes
     - only 1000 max results per search
