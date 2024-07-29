@@ -28,9 +28,9 @@ def capsolver(blob_data: str, api_key: str):
     resp = res.json()
     task_id = resp.get("taskId")
     if not task_id:
-        logger.info(f"Failed to create task: {res.text}")
+        logger.info(f"Failed to create task - CapSolver message: {res.text}")
         return None
-    logger.info(f"Got captcha solver taskId: {task_id} / Getting result...")
+    logger.info(f"Received captcha solver taskId: {task_id} / Getting result...")
 
     while True:
         time.sleep(1)  # delay

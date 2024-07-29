@@ -2,6 +2,8 @@ from datetime import datetime, date
 
 from pydantic import BaseModel
 
+from staffspy.utils import extract_emails_from_text
+
 
 class School(BaseModel):
     start_date: date | None = None
@@ -79,9 +81,11 @@ class Staff(BaseModel):
     last_name: str | None = None
     potential_emails: list | None = None
     bio: str | None = None
+    emails_in_bio: str | None = None
     followers: int | None = None
     connections: int | None = None
     mutual_connections: int | None = None
+    is_connection: bool | None = None
     location: str | None = None
     company: str | None = None
     school: str | None = None
@@ -129,6 +133,7 @@ class Staff(BaseModel):
         top_three_companies += [None] * (3 - len(top_three_companies))
         top_three_skills=self.get_top_skills()
 
+        self.emails_in_bio=extract_emails_from_text(self.bio) if self.bio else None
         return {
             "search_term": self.search_term,
             "id": self.id,
@@ -138,11 +143,11 @@ class Staff(BaseModel):
             "last_name": self.last_name,
             "location": self.location,
             "estimated_age": estimated_age,
-            "potential_emails": ', '.join(self.potential_emails) if self.potential_emails else None,
             "position": self.position,
             "followers": self.followers,
             "connections": self.connections,
             "mutuals": self.mutual_connections,
+            "is_connection": self.is_connection,
             "premium": self.premium,
             "creator": self.creator,
             "influencer": self.influencer,
@@ -154,7 +159,6 @@ class Staff(BaseModel):
             "skill_1": top_three_skills[0],
             "skill_2": top_three_skills[1],
             "skill_3": top_three_skills[2],
-            "profile_link": self.profile_link,
             "bio": self.bio,
             "experiences": (
                 [exp.to_dict() for exp in self.experiences]
@@ -172,6 +176,9 @@ class Staff(BaseModel):
                 if self.certifications
                 else None
             ),
+            "emails_in_bio": ', '.join(self.emails_in_bio) if self.emails_in_bio else None,
+            "potential_emails": ', '.join(self.potential_emails) if self.potential_emails else None,
+            "profile_link": self.profile_link,
             "profile_photo": self.profile_photo,
         }
 

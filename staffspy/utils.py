@@ -2,7 +2,6 @@ import logging
 import os
 import pickle
 import re
-import sys
 from datetime import datetime
 from urllib.parse import quote
 from dateutil.parser import parse
@@ -165,14 +164,6 @@ class Login:
         if data['login_result']=='CHALLENGE':
             self.solve_captcha(session,data,payload)
 
-        session.headers.update(
-            {
-                "User-Agent": "Mozilla/5.0 (Linux; U; Android 4.4.2; en-us; SCH-I535 Build/KOT49H) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30",
-                "X-RestLi-Protocol-Version": "2.0.0",
-                "X-Li-Track": '{"clientVersion":"1.13.1665"}',
-            }
-        )
-
         session = set_csrf_token(session)
         return session
 
@@ -182,7 +173,7 @@ class Login:
 
         if driver is None:
             logger.debug("No browser found for selenium")
-            sys.exit(1)
+            raise Exception('driver not found for selenium')
 
         driver.get("https://linkedin.com/login")
         input("Press enter after logged in")
@@ -193,15 +184,6 @@ class Login:
         session = requests.Session()
         for cookie in selenium_cookies:
             session.cookies.set(cookie["name"], cookie["value"])
-
-        user_agent = "Mozilla/5.0 (Linux; U; Android 4.4.2; en-us; SCH-I535 Build/KOT49H) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30"
-        session.headers.update(
-            {
-                "User-Agent": user_agent,
-                "X-RestLi-Protocol-Version": "2.0.0",
-                "X-Li-Track": '{"clientVersion":"1.13.1665"}',
-            }
-        )
 
         session = set_csrf_token(session)
         return session
@@ -234,6 +216,14 @@ def load_session(session_file, username: str, password: str, capsolver_api_key: 
             session = requests.Session()
             session.cookies.update(data["cookies"])
             session.headers.update(data["headers"])
+    session.headers.update(
+        {
+            "User-Agent": "Mozilla/5.0 (Linux; U; Android 4.4.2; en-us; SCH-I535 Build/KOT49H) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30",
+            "X-RestLi-Protocol-Version": "2.0.0",
+            "X-Li-Track": '{"clientVersion":"1.13.1665"}',
+            'x-li-graphql-pegasus-client': 'true'
+        }
+    )
     return session
 
 
@@ -299,6 +289,13 @@ def parse_dates(date_str):
                 start_date = parse(matches[0]).date()
 
     return start_date, end_date
+
+
+def extract_emails_from_text(text: str) -> list[str] | None:
+    if not text:
+        return None
+    email_regex = re.compile(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}")
+    return email_regex.findall(text)
 
 
 if __name__ == "__main__":

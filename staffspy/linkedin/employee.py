@@ -4,6 +4,7 @@ import re
 
 import staffspy.utils as utils
 from staffspy.exceptions import TooManyRequests
+from staffspy.models import Staff
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +41,7 @@ class EmployeeFetcher:
         self.parse_emp(base_staff, employee_json)
         return True
 
-    def parse_emp(self, emp, emp_dict):
+    def parse_emp(self, emp: Staff, emp_dict: dict):
         """Parse the employee data from the employee profile."""
         try:
             photo_data = emp_dict["profilePicture"]["displayImageReference"][
@@ -53,6 +54,7 @@ class EmployeeFetcher:
             profile_photo = None
 
         emp.profile_id = emp_dict["publicIdentifier"]
+        emp.is_connection=next(iter(emp_dict['memberRelationship']['memberRelationshipUnion'])) =='connection'
 
         emp.profile_link = f'https://www.linkedin.com/in/{emp_dict["publicIdentifier"]}'
 
