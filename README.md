@@ -59,8 +59,7 @@ If that fails or you rather use a browser, install the browser add-on to StaffSp
 
 Do not pass the ```username``` & ```password``` params, then a browser will open to sign in to LinkedIn on the first sign-in. Press enter after signing in to begin scraping.
 
-### Partial Output
-### Partial Output
+### Output
 | profile_id     | name          | first_name | last_name | location                                 | age | position                                   | followers | connections | premium | company | past_company1 | past_company2 | school                                         | extra_school                   | skill1    | skill2      | skill3     | is_connection | premium | creator | potential_email                               | profile_link                                | profile_photo |
 |----------------|---------------|------------|-----------|------------------------------------------|-----|--------------------------------------------|-----------|-------------|---------|---------|---------------|---------------|-----------------------------------------------|-------------------------------|-----------|-------------|------------|---------------|----------|---------|----------------------------------------------|---------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|
 | javiersierra2102 | Javier Sierra | Javier     | Sierra    | London, England, United Kingdom           | 39  | Software Engineer                          | 735       | 725         | FALSE   | OpenAI  | Meta           | Oculus VR     | Hult International Business School            | Universidad Simón Bolívar     | Java      | JavaScript  | C++        | FALSE         | FALSE    | FALSE   | javier.sierra@openai.com, jsierra@openai.com | https://www.linkedin.com/in/javiersierra2102 | https://media.licdn.com/dms/image/C4D03AQHEyUg1kGT08Q/profile-displayphoto-shrink_800_800/0/1516504680512?e=1727913600&v=beta&t=3enCmNDBtJ7LxfbW6j1hDD8qNtHjO2jb2XTONECxUXw |
@@ -113,42 +112,51 @@ Optional
 ### Staff Schema
 ```plaintext
 Staff
-├── search_term
-├── id
-├── name
-├── first_name
-├── last_name
-├── location
-├── bio
-|
-├── position
-├── profile_id
-├── profile_link
-├── potential_emails
-├── estimated_age
-|
-├── followers
-├── connections
-├── mutuals_count
-|
-├── company
-├── past_company1
-├── past_company2
-├── school
-├── extra_school
-├── top_skill_1
-├── top_skill_2
-├── top_skill_1
-|
-├── influencer
-├── creator
-├── premium
-├── profile_photo
-|
-├── skills
+├── Personal Information
+│   ├── search_term
+│   ├── id
+│   ├── name
+│   ├── first_name
+│   ├── last_name
+│   ├── location
+│   └── bio
+│
+├── Professional Details
+│   ├── position
+│   ├── profile_id
+│   ├── profile_link
+│   ├── potential_emails
+│   └── estimated_age
+│
+├── Social Connectivity
+│   ├── followers
+│   ├── connections
+│   └── mutuals_count
+│
+├── Employment History
+│   ├── company
+│   ├── past_company1
+│   ├── past_company2
+│   ├── school
+│   ├── extra_school
+│   ├── top_skill_1
+│   ├── top_skill_2
+│   └── top_skill_3
+│
+├── Status
+│   ├── influencer
+│   ├── creator
+│   ├── premium
+│   └── is_connection
+│
+├── Visuals
+│   └── profile_photo
+│
+├── Skills
 │   ├── name
 │   └── endorsements
-├── experiences
+│
+├── Experiences
 │   ├── from_date
 │   ├── to_date
 │   ├── duration
@@ -156,16 +164,19 @@ Staff
 │   ├── company
 │   ├── location
 │   └── emp_type
-├── certifications
+│
+├── Certifications
 │   ├── title
 │   ├── issuer
 │   ├── date_issued
 │   ├── cert_id
 │   └── cert_link
-└── schools
+│
+└── Educational Background
     ├── years
     ├── school
     └── degree
+
 ```
 ### LinkedIn notes
     - only 1000 max results per search
