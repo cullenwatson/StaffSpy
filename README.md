@@ -41,7 +41,7 @@ staff = scrape_staff(
     session_file=str(session_file), # save login cookies to only log in once (lasts a week or so)
     log_level=1, # 0 for no logs
 )
-filename = f"staff.csv"
+filename = "staff.csv"
 staff.to_csv(filename, index=False)
 ```
 
