@@ -108,7 +108,7 @@ Optional
 |    linkedin account password
 |
 ├── solver_service (SolverType): 
-|    solves the captcha using the desired service - either CapSolver, or 2Captcha (lower quality)
+|    solves the captcha using the desired service - either CapSolver, or 2Captcha (tends to fail)
 |
 ├── solver_api_key (str): 
 |    api key for the solver provider
