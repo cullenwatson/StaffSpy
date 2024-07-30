@@ -10,6 +10,8 @@ import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from urllib.parse import quote
 
+import requests
+
 import staffspy.utils as utils
 from staffspy.exceptions import TooManyRequests, BadCookies, GeoUrnNotFound
 from staffspy.linkedin.certifications import CertificationFetcher
@@ -29,8 +31,8 @@ class LinkedInScraper:
     location_id_ep = "https://www.linkedin.com/voyager/api/graphql?queryId=voyagerSearchDashReusableTypeahead.57a4fa1dd92d3266ed968fdbab2d7bf5&queryName=SearchReusableTypeaheadByType&variables=(query:(showFullLastNameForConnections:false,typeaheadFilterQuery:(geoSearchTypes:List(MARKET_AREA,COUNTRY_REGION,ADMIN_DIVISION_1,CITY))),keywords:{location},type:GEO,start:0)"
     get_company_from_user_ep = "https://www.linkedin.com/voyager/api/identity/profiles/{user_id}/profileView"
 
-    def __init__(self, session_file, username=None, password=None, capsolver_api_key=None):
-        self.session = utils.load_session(session_file, username, password, capsolver_api_key)
+    def __init__(self, session: requests.Session):
+        self.session = session
         (
             self.company_id,
             self.staff_count,
@@ -311,7 +313,7 @@ class LinkedInScraper:
             res_json = res.json()
         except json.decoder.JSONDecodeError:
             logger.debug(res.text[:200])
-            raise Exception(f'Failed to load json in fetch_comany_id_from_user {res.text[:200]}')
+            raise Exception(f'Failed to load json in fetch_comany_id_from_user', res.status_code)
         try:
             return res_json['positionView']['elements'][0]['company']['miniCompany']['universalName']
         except:
