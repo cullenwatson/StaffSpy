@@ -35,7 +35,7 @@ staff = scrape_staff(
     username="myemail@gmail.com",
     password="mypassword",
     
-    # in case hit with captcha on sign-in
+    # in case hit with captcha on requests-based sign-in
     solver_api_key="CAP-6D6A8CE981803A309A0D531F8B4790BC",
     solver_service=SolverType.CAPSOLVER,
 
