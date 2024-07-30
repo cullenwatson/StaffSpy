@@ -225,7 +225,6 @@ def load_session(session_file, username: str, password: str, capsolver_api_key: 
             "User-Agent": "Mozilla/5.0 (Linux; U; Android 4.4.2; en-us; SCH-I535 Build/KOT49H) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30",
             "X-RestLi-Protocol-Version": "2.0.0",
             "X-Li-Track": '{"clientVersion":"1.13.1665"}',
-            'x-li-graphql-pegasus-client': 'true'
         }
     )
     return session

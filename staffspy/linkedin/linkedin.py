@@ -86,7 +86,9 @@ class LinkedInScraper:
         elif res.status_code == 404:
             logger.info(f"Failed to directly use company '{company_name}' as company id, now searching for the company")
             company_name = self.search_companies(company_name)
+            self.session.headers['x-li-graphql-pegasus-client'] = "true"
             res = self.session.get(f"{self.company_id_ep}{company_name}")
+            self.session.headers.pop('x-li-graphql-pegasus-client','')
             if res.status_code != 200:
                 raise Exception(
                     f"Failed to find company after performing a direct and generic search for {company_name}",
@@ -160,7 +162,6 @@ class LinkedInScraper:
 
     def fetch_staff(self, offset, company_id):
         """Fetch the staff at the company using LinkedIn search"""
-        self.session.headers.pop('x-li-graphql-pegasus-client', '')
         ep = self.employees_ep.format(
             offset=offset,
             company_id=company_id,
@@ -202,6 +203,8 @@ class LinkedInScraper:
         try:
             res_json = res.json()
         except json.decoder.JSONDecodeError:
+            if res.reason=='INKApi Error':
+                raise Exception('Delete session file and log in again', res.status_code, res.text[:200], res.reason)
             raise GeoUrnNotFound("Failed to send request to get geo id", res.status_code, res.text[:200], res.reason)
 
         try:
