@@ -72,11 +72,15 @@ Do not pass the ```username``` & ```password``` params, then a browser will open
 ### Parameters for `scrape_staff()`
 
 ```plaintext
+Optional 
 ├── company_name (str): 
 |    company identifier on linkedin, will search for that company if that company id does not exist
 |    e.g. openai from https://www.linkedin.com/company/openai
-
-Optional 
+|
+├── user_id (str): 
+|    alternative to company_name, provide user identifier on linkedin, will find this user's company and then proceed
+|    e.g. dougmcmillon from https://www.linkedin.com/in/dougmcmillon
+|
 ├── search_term (str): 
 |    staff title to search for
 |    e.g. software engineer

@@ -53,6 +53,7 @@ class EmployeeFetcher:
             profile_photo = None
 
         emp.profile_id = emp_dict["publicIdentifier"]
+        emp.is_connection = next(iter(emp_dict['memberRelationship']['memberRelationshipUnion'])) == 'connection'
 
         emp.profile_link = f'https://www.linkedin.com/in/{emp_dict["publicIdentifier"]}'
 
