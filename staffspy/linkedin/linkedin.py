@@ -27,6 +27,7 @@ class LinkedInScraper:
     company_id_ep = "https://www.linkedin.com/voyager/api/organization/companies?q=universalName&universalName="
     company_search_ep="https://www.linkedin.com/voyager/api/graphql?queryId=voyagerSearchDashClusters.02af3bc8bc85a169bb76bb4805d05759&queryName=SearchClusterCollection&variables=(query:(flagshipSearchIntent:SEARCH_SRP,keywords:{company},includeFiltersInResponse:false,queryParameters:(keywords:List({company}),resultType:List(COMPANIES))),count:10,origin:GLOBAL_SEARCH_HEADER,start:0)"
     location_id_ep = "https://www.linkedin.com/voyager/api/graphql?queryId=voyagerSearchDashReusableTypeahead.57a4fa1dd92d3266ed968fdbab2d7bf5&queryName=SearchReusableTypeaheadByType&variables=(query:(showFullLastNameForConnections:false,typeaheadFilterQuery:(geoSearchTypes:List(MARKET_AREA,COUNTRY_REGION,ADMIN_DIVISION_1,CITY))),keywords:{location},type:GEO,start:0)"
+    get_company_from_user_ep = "https://www.linkedin.com/voyager/api/identity/profiles/{user_id}/profileView"
 
     def __init__(self, session_file, username=None, password=None, capsolver_api_key=None):
         self.session = utils.load_session(session_file, username, password, capsolver_api_key)
@@ -209,12 +210,12 @@ class LinkedInScraper:
         self.location = geo_id
 
     def scrape_staff(
-        self,
-        company_name: str,
-        search_term: str,
-        location: str,
-        extra_profile_data: bool,
-        max_results: int,
+            self,
+            company_name: str,
+            search_term: str,
+            location: str,
+            extra_profile_data: bool,
+            max_results: int,
     ):
         """Main driver function"""
         self.search_term = search_term
@@ -289,3 +290,17 @@ class LinkedInScraper:
                     raise TooManyRequests(
                         f"Stopping due to API rate limit exceeded for {tasks[future]}"
                     )
+
+    def fetch_company_id_from_user(self, user_id):
+        ep = self.get_company_from_user_ep.format(user_id=user_id)
+        res = self.session.get(ep)
+        try:
+            res_json = res.json()
+        except json.decoder.JSONDecodeError:
+            logger.debug(res.text[:200])
+            raise Exception('Failed to load json in fetch_comany_id_from_user', res.text[:200])
+        try:
+            company_id = res_json['positionView']['elements'][0]['company']['miniCompany']['universalName']
+        except:
+            company_id = None
+        return company_id

@@ -6,21 +6,32 @@ from staffspy.utils import set_logger_level, logger
 
 
 def scrape_staff(
-    *,
-    company_name: str,
-    session_file: str = None,
-    search_term: str = None,
-    location: str = None,
-    extra_profile_data: bool = False,
-    max_results: int = 1000,
-    log_level: int = 0,
-    username: str = None,
-    password: str = None,
-    capsolver_api_key: str = None
+        *,
+        company_name: str = None,
+        user_id: str = None,
+        session_file: str = None,
+        search_term: str = None,
+        location: str = None,
+        extra_profile_data: bool = False,
+        max_results: int = 1000,
+        log_level: int = 0,
+        username: str = None,
+        password: str = None,
+        capsolver_api_key: str = None
 ) -> pd.DataFrame:
     set_logger_level(log_level)
 
     li = LinkedInScraper(session_file, username, password, capsolver_api_key)
+
+    if not company_name:
+        if not user_id:
+            raise ValueError("Either company_name or user_id must be provided")
+        try:
+            company_name = li.fetch_company_id_from_user(user_id)
+            logger.info(f"Found Company for User {user_id}: {company_name}")
+        except Exception as e:
+            logger.error(f"Failed to find company for user {user_id}: {e}")
+            return pd.DataFrame()
 
     staff = li.scrape_staff(
         company_name=company_name,
