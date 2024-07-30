@@ -49,7 +49,7 @@ class EmployeeFetcher:
             photo_base_url = photo_data["rootUrl"]
             photo_ext_url = photo_data["artifacts"][-1]["fileIdentifyingUrlPathSegment"]
             profile_photo = f"{photo_base_url}{photo_ext_url}"
-        except KeyError:
+        except (KeyError, TypeError, IndexError, ValueError) as e:
             profile_photo = None
 
         emp.profile_id = emp_dict["publicIdentifier"]
@@ -95,5 +95,5 @@ class EmployeeFetcher:
                     emp.mutual_connections = (
                         2 if " and " in mutual_connections_str else 1
                     )
-        except KeyError:
+        except (KeyError, TypeError, IndexError, ValueError) as e:
             pass

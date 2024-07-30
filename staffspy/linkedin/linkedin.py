@@ -97,7 +97,7 @@ class LinkedInScraper:
         logger.debug(f"Fetched company {res.status_code}")
         return res
 
-    def get_company_id_and_staff_count(self, company_name):
+    def get_company_id_and_staff_count(self, company_name: str):
         """Extract company id and staff count from the company details."""
         res = self.fetch_or_search_company(company_name)
 
@@ -105,7 +105,7 @@ class LinkedInScraper:
             response_json = res.json()
         except json.decoder.JSONDecodeError:
             logger.debug(res.text[:200])
-            raise Exception('Failed to load json in get_company_id_and_staff_count', res.text[:200])
+            raise Exception(f'Failed to load json in get_company_id_and_staff_count {res.text[:200]}')
 
         company = response_json["elements"][0]
         self.domain = utils.extract_base_domain(company["companyPageUrl"])
@@ -202,14 +202,12 @@ class LinkedInScraper:
         try:
             res_json = res.json()
         except json.decoder.JSONDecodeError:
-            logger.debug(res.text[:200])
-            raise GeoUrnNotFound("Failed to find geo id")
+            raise GeoUrnNotFound("Failed to send request to get geo id", res.status_code, res.text[:200], res.reason)
 
         try:
             elems = res_json["data"]["searchDashReusableTypeaheadByType"]["elements"]
         except (KeyError, IndexError, TypeError):
-            logger.debug(res_json)
-            raise GeoUrnNotFound("Failed to find geo id")
+            raise GeoUrnNotFound("Failed to locate geo id", res_json[:200])
 
         geo_id = None
         if elems:
@@ -218,7 +216,7 @@ class LinkedInScraper:
             if m:
                 geo_id = m.group(1)
         if not geo_id:
-            raise GeoUrnNotFound("Failed to find geo id")
+            raise GeoUrnNotFound("Failed to parse geo id")
         self.location = geo_id
 
     def scrape_staff(
@@ -235,7 +233,7 @@ class LinkedInScraper:
         self.max_results = max_results
         self.raw_location = location
 
-        company_id, staff_count = self.get_company_id(company_name)
+        company_id, staff_count = self.get_company_id_and_staff_count(company_name)
         staff_list: list[Staff] = []
         self.num_staff = min(staff_count, max_results, 1000)
 
@@ -303,14 +301,14 @@ class LinkedInScraper:
                         f"Stopping due to API rate limit exceeded for {tasks[future]}"
                     )
 
-    def fetch_comany_id_from_user(self, user_id):
+    def fetch_company_id_from_user(self, user_id: str):
         ep = self.get_company_from_user_ep.format(user_id=user_id)
         res = self.session.get(ep)
         try:
             res_json = res.json()
         except json.decoder.JSONDecodeError:
             logger.debug(res.text[:200])
-            raise Exception('Failed to load json in fetch_comany_id_from_user', res.text[:200])
+            raise Exception(f'Failed to load json in fetch_comany_id_from_user {res.text[:200]}')
         try:
             return res_json['positionView']['elements'][0]['company']['miniCompany']['universalName']
         except:

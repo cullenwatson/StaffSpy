@@ -27,7 +27,7 @@ def scrape_staff(
         if not user_id:
             raise ValueError("Either company_name or user_id must be provided")
 
-        company_name = li.fetch_comany_id_from_user(user_id)
+        company_name = li.fetch_company_id_from_user(user_id)
 
     staff = li.scrape_staff(
         company_name=company_name,

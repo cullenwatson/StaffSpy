@@ -1,16 +1,14 @@
-from requests.exceptions import RequestException
-
-
-class TooManyRequests(RequestException):
+class TooManyRequests(Exception):
     """Too many requests."""
 
 
-class BadCookies(RequestException):
+class BadCookies(Exception):
     """Login expiration."""
 
 
-class GeoUrnNotFound(RequestException):
+class GeoUrnNotFound(Exception):
     """Could not find geo urn for given location."""
 
+
 class BlobException(Exception):
-    pass
+    """Could not find the blob needed to solve the captcha."""
