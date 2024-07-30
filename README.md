@@ -48,7 +48,7 @@ staff.to_csv(filename, index=False)
 ### Two login methods
 
 #### Requests login
-If you pass in a ```username``` & ```password```, it will sign in via LinkedIn api (you should disable 2fa for this method). If hit with a captcha, you need to pass ```capsolver_api_key``` for the third-party service to solve it. _Capsolver captcha service is currently in maintenance for past few days. Should become functional again soon_
+If you pass in a ```username``` & ```password```, it will sign in via LinkedIn api (you should disable 2fa for this method). If hit with a captcha, you need to pass ```capsolver_api_key``` for the third-party service to solve it. _Capsolver captcha service is currently in maintenance for past few days. Should become functional again soon. Otherwise, we'll switch providers_
 
 
 #### Browser login
