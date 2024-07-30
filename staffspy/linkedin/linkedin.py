@@ -25,7 +25,7 @@ from staffspy.utils import logger
 class LinkedInScraper:
     employees_ep = "https://www.linkedin.com/voyager/api/graphql?variables=(start:{offset},query:(flagshipSearchIntent:SEARCH_SRP,{search}queryParameters:List((key:currentCompany,value:List({company_id})),{location}(key:resultType,value:List(PEOPLE))),includeFiltersInResponse:false),count:{count})&queryId=voyagerSearchDashClusters.66adc6056cf4138949ca5dcb31bb1749"
     company_id_ep = "https://www.linkedin.com/voyager/api/organization/companies?q=universalName&universalName="
-    company_search_ep="https://www.linkedin.com/voyager/api/graphql?queryId=voyagerSearchDashClusters.02af3bc8bc85a169bb76bb4805d05759&queryName=SearchClusterCollection&variables=(query:(flagshipSearchIntent:SEARCH_SRP,keywords:{company},includeFiltersInResponse:false,queryParameters:(keywords:List({company}),resultType:List(COMPANIES))),count:10,origin:GLOBAL_SEARCH_HEADER,start:0)"
+    company_search_ep = "https://www.linkedin.com/voyager/api/graphql?queryId=voyagerSearchDashClusters.02af3bc8bc85a169bb76bb4805d05759&queryName=SearchClusterCollection&variables=(query:(flagshipSearchIntent:SEARCH_SRP,keywords:{company},includeFiltersInResponse:false,queryParameters:(keywords:List({company}),resultType:List(COMPANIES))),count:10,origin:GLOBAL_SEARCH_HEADER,start:0)"
     location_id_ep = "https://www.linkedin.com/voyager/api/graphql?queryId=voyagerSearchDashReusableTypeahead.57a4fa1dd92d3266ed968fdbab2d7bf5&queryName=SearchReusableTypeaheadByType&variables=(query:(showFullLastNameForConnections:false,typeaheadFilterQuery:(geoSearchTypes:List(MARKET_AREA,COUNTRY_REGION,ADMIN_DIVISION_1,CITY))),keywords:{location},type:GEO,start:0)"
     get_company_from_user_ep = "https://www.linkedin.com/voyager/api/identity/profiles/{user_id}/profileView"
 
@@ -61,20 +61,22 @@ class LinkedInScraper:
             )
         logger.debug(f"Searched companies {res.status_code}")
         try:
-            first_company = res.json()['data']['searchDashClustersByAll']['elements'][1]['items'][0]['item']['entityResult']
+            first_company = res.json()['data']['searchDashClustersByAll']['elements'][1]['items'][0]['item'][
+                'entityResult']
             company_link = first_company['navigationUrl']
-            company_name_id=re.search(r'/company/([^/]+)', company_link).group(1)
+            company_name_id = re.search(r'/company/([^/]+)', company_link).group(1)
             company_name_new = first_company['title']['text']
         except Exception as e:
             raise Exception(f'Failed to load json in search_companies {str(e)}, Response: {res.text[:200]}')
 
-        logger.info(f"Searched company {company_name} on LinkedIn and found company id - '{company_name_id}' with company name - '{company_name_new}'")
+        logger.info(
+            f"Searched company {company_name} on LinkedIn and found company id - '{company_name_id}' with company name - '{company_name_new}'")
         return company_name_id
 
     def get_company_id(self, company_name):
         """Get the company id and staff count from the company name."""
         res = self.session.get(f"{self.company_id_ep}{company_name}")
-        if res.status_code not in (200,404):
+        if res.status_code not in (200, 404):
             raise Exception(
                 f"Failed to find company {company_name}",
                 res.status_code,
@@ -82,7 +84,7 @@ class LinkedInScraper:
             )
         elif res.status_code == 404:
             logger.info(f"Failed to directly use company '{company_name}' as company id, now searching for the company")
-            company_name= self.search_companies(company_name)
+            company_name = self.search_companies(company_name)
             res = self.session.get(f"{self.company_id_ep}{company_name}")
             if res.status_code != 200:
                 raise Exception(
@@ -102,7 +104,7 @@ class LinkedInScraper:
         staff_count = company["staffCount"]
         company_id = company["trackingInfo"]["objectUrn"].split(":")[-1]
         try:
-            company_name =re.search(r'/company/([^/]+)', company['url']).group(1)
+            company_name = re.search(r'/company/([^/]+)', company['url']).group(1)
         except:
             pass
         logger.info(f"Found company '{company_name}' with {staff_count} staff")
@@ -148,7 +150,7 @@ class LinkedInScraper:
 
     def fetch_staff(self, offset, company_id):
         """Fetch the staff at the company using LinkedIn search"""
-        self.session.headers.pop('x-li-graphql-pegasus-client','')
+        self.session.headers.pop('x-li-graphql-pegasus-client', '')
         ep = self.employees_ep.format(
             offset=offset,
             company_id=company_id,
@@ -300,7 +302,6 @@ class LinkedInScraper:
             logger.debug(res.text[:200])
             raise Exception('Failed to load json in fetch_comany_id_from_user', res.text[:200])
         try:
-            company_id = res_json['positionView']['elements'][0]['company']['miniCompany']['universalName']
+            return res_json['positionView']['elements'][0]['company']['miniCompany']['universalName']
         except:
-            company_id = None
-        return company_id
+            raise Exception(f'Failed to fetch company for user_id {user_id}')

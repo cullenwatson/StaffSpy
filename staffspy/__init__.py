@@ -26,16 +26,8 @@ def scrape_staff(
     if not company_name:
         if not user_id:
             raise ValueError("Either company_name or user_id must be provided")
-        try:
-            company_name = li.fetch_comany_id_from_user(user_id)
-            # Explicitly check if company_name is None or empty
-            if not company_name:
-                raise ValueError(f"No company found for user_id {user_id}")
 
-            logger.info(f"Found Company for User {user_id}: {company_name}")
-        except Exception as e:
-            logger.error(f"Failed to find company for user {user_id}: {e}")
-            return pd.DataFrame()
+        company_name = li.fetch_comany_id_from_user(user_id)
 
     staff = li.scrape_staff(
         company_name=company_name,
