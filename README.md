@@ -21,7 +21,7 @@ _Python version >= [3.10](https://www.python.org/downloads/release/python-3100/)
 ### Usage
 
 ```python
-from staffspy import scrape_staff
+from staffspy import scrape_staff, SolverType
 from pathlib import Path
 session_file = Path(__file__).resolve().parent / "session.pkl"
 
@@ -34,7 +34,9 @@ staff = scrape_staff(
     # login credentials (remove these to sign in with browser)
     username="myemail@gmail.com",
     password="mypassword",
-    capsolver_api_key="CAP-6D6A8CE981803A309A0D531F8B4790BC", # in case hit with captcha on sign-in
+    solver_api_key="CAP-6D6A8CE981803A309A0D531F8B4790BC", # in case hit with captcha on sign-in
+    solver_service=SolverType.CAPSOLVER,
+    
     
 
     max_results=50, # can go up to 1000
@@ -105,8 +107,11 @@ Optional
 ├── password (str): 
 |    linkedin account password
 |
-├── capsolver_api_key (str): 
-|    solves the captcha using capsolver.com if hit with captcha on login
+├── solver_service (SolverType): 
+|    solves the captcha using the desired service - either CapSolver, or 2Captcha (lower quality)
+|
+├── solver_api_key (str): 
+|    api key for the solver provider
 │
 ├── log_level (int): 
 |    Controls the verbosity of the runtime printouts 

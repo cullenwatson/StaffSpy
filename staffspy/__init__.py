@@ -1,8 +1,11 @@
 import pandas as pd
 
 from staffspy.linkedin.linkedin import LinkedInScraper
+from staffspy.solvers.capsolver import CapSolver
+from staffspy.solvers.solver_type import SolverType
+from staffspy.solvers.two_captcha import TwoCaptchaSolver
 
-from staffspy.utils import set_logger_level, logger
+from staffspy.utils import set_logger_level, logger, Login
 
 
 def scrape_staff(
@@ -17,11 +20,33 @@ def scrape_staff(
         log_level: int = 0,
         username: str = None,
         password: str = None,
-        capsolver_api_key: str = None
+        solver_api_key: str = None,
+        solver_service: SolverType = SolverType.CAPSOLVER
+
 ) -> pd.DataFrame:
+    """Scrape staff from Linkedin
+    company_name - name of company to find staff frame
+    user_id - alternative to company_name, fetches the company_name from the user profile
+    session_file - place to save cookies to only sign in once
+    search_term - occupation / term to search for at the company
+    location - filter for staff at a location
+    extra_profile_data - fetches staff's experiences, schools, and mor
+    max_results - amount of results you desire
+    log_level - level of logs, 0 for no logs, 2 for all
+    usernme,password - for requests based sign in
+    solver_api_key,solver_service - options to bypass captcha
+    """
     set_logger_level(log_level)
 
-    li = LinkedInScraper(session_file, username, password, capsolver_api_key)
+    solver=None
+    if solver_service == SolverType.CAPSOLVER:
+        solver = CapSolver(solver_api_key)
+    elif solver_service == SolverType.TWO_CAPTCHA:
+        solver = TwoCaptchaSolver(solver_api_key)
+    login = Login(username, password, solver, session_file)
+    session = login.load_session()
+
+    li = LinkedInScraper(session)
 
     if not company_name:
         if not user_id:

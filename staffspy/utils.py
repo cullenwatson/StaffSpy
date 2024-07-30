@@ -2,6 +2,7 @@ import logging
 import os
 import pickle
 import re
+import time
 from datetime import datetime
 from urllib.parse import quote
 from dateutil.parser import parse
@@ -11,8 +12,8 @@ import tldextract
 from bs4 import BeautifulSoup
 from tenacity import stop_after_attempt, retry_if_exception_type, retry, RetryError
 
-from staffspy.capsolver import capsolver
 from staffspy.exceptions import BlobException
+from staffspy.solvers.solver import Solver
 
 logger = logging.getLogger("StaffSpy")
 logger.propagate = False
@@ -61,8 +62,8 @@ def get_webdriver():
 
 class Login:
 
-    def __init__(self, username,password, capsolver_api_key):
-        self.username,self.password,self.capsolver_api_key=username,password,capsolver_api_key
+    def __init__(self, username: str,password: str, solver: Solver, session_file: str):
+        self.username,self.password,self.solver,self.session_file=username,password,solver,session_file
 
     def solve_captcha(self, session,data,payload):
         url=data['challenge_url']
@@ -72,7 +73,7 @@ class Login:
 
         code_tag = soup.find('code', id='securedDataExchange')
 
-        logger.info('Searching for capcha blob in linkedin to begin captcha solving')
+        logger.info('Searching for captcha blob in linkedin to begin captcha solving')
         if code_tag:
             comment = code_tag.contents[0]
             extracted_code = str(comment).strip("<!--\"\"-->").strip()
@@ -82,9 +83,9 @@ class Login:
         else:
             raise BlobException('blob to solve captcha not found - rerunning the program usually solves this')
 
-        if not self.capsolver_api_key:
-            raise Exception('captcha hit - provide CapSolver API key to solve or switch to the browser-based login with `pip install staffspy[browser]`')
-        token = capsolver(extracted_code,self.capsolver_api_key)
+        if not self.solver:
+            raise Exception('captcha hit - provide solver_api_key and solver_service name to solve or switch to the browser-based login with `pip install staffspy[browser]`')
+        token = self.solver.solve(extracted_code,url)
         if not token:
             raise Exception('failed to solve captcha after 10 attempts')
 
@@ -192,42 +193,39 @@ class Login:
         session = set_csrf_token(session)
         return session
 
+    def save_session(self, session, session_file: str):
+        data = {"cookies": session.cookies, "headers": session.headers}
+        with open(session_file, "wb") as f:
+            pickle.dump(data, f)
 
-def save_session(session, session_file):
-    data = {"cookies": session.cookies, "headers": session.headers}
-    with open(session_file, "wb") as f:
-        pickle.dump(data, f)
-
-
-def load_session(session_file, username: str, password: str, capsolver_api_key: str):
-    session=None
-    login_obj=Login(username,password,capsolver_api_key)
-    if not session_file or not os.path.exists(session_file):
-        if username and password:
-            try:
-                session = login_obj.login_requests()
-            except RetryError as retry_err:
-                retry_err.reraise()
+    def load_session(self):
+        session=None
+        if not self.session_file or not os.path.exists(self.session_file):
+            if self.username and self.password:
+                try:
+                    session = self.login_requests()
+                except RetryError as retry_err:
+                    retry_err.reraise()
+            else:
+                session = self.login_browser()
+            if not session:
+                raise Exception("Failed to log in.")
+            if self.session_file:
+                self.save_session(session, self.session_file)
         else:
-            session = login_obj.login_browser()
-        if not session:
-            raise Exception("Failed to log in.")
-        if session_file:
-            save_session(session, session_file)
-    else:
-        with open(session_file, "rb") as f:
-            data = pickle.load(f)
-            session = requests.Session()
-            session.cookies.update(data["cookies"])
-            session.headers.update(data["headers"])
-    session.headers.update(
-        {
-            "User-Agent": "Mozilla/5.0 (Linux; U; Android 4.4.2; en-us; SCH-I535 Build/KOT49H) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30",
-            "X-RestLi-Protocol-Version": "2.0.0",
-            "X-Li-Track": '{"clientVersion":"1.13.1665"}',
-        }
-    )
-    return session
+            with open(self.session_file, "rb") as f:
+                data = pickle.load(f)
+                session = requests.Session()
+                session.cookies.update(data["cookies"])
+                session.headers.update(data["headers"])
+        session.headers.update(
+            {
+                "User-Agent": "Mozilla/5.0 (Linux; U; Android 4.4.2; en-us; SCH-I535 Build/KOT49H) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30",
+                "X-RestLi-Protocol-Version": "2.0.0",
+                "X-Li-Track": '{"clientVersion":"1.13.1665"}',
+            }
+        )
+        return session
 
 
 def parse_date(date_str):

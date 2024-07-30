@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "staffspy"
-version = "0.2.4"
+version = "0.2.5"
 description = "Staff scraper library for LinkedIn"
 authors = ["Cullen Watson <cullen@bunsly.com>"]
 readme = "README.md"
@@ -15,6 +15,7 @@ selenium = { version = "^4.3.0", optional = true }
 tenacity = "^8.5.0"
 python-dateutil = "^2.9.0.post0"
 beautifulsoup4 = "^4.12.3"
+2captcha-python = "^1.2.8"
 
 [tool.poetry.extras]
 browser = ["selenium"]
