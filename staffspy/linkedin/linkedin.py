@@ -52,7 +52,9 @@ class LinkedInScraper:
     def search_companies(self, company_name):
         """Get the company id and staff count from the company name."""
         company_search_ep = self.company_search_ep.format(company=quote(company_name))
+        self.session.headers['x-li-graphql-pegasus-client'] = "true"
         res = self.session.get(company_search_ep)
+        self.session.headers.pop('x-li-graphql-pegasus-client', '')
         if res.status_code != 200:
             raise Exception(
                 f"Failed to search for company {company_name}",
@@ -86,9 +88,7 @@ class LinkedInScraper:
         elif res.status_code == 404:
             logger.info(f"Failed to directly use company '{company_name}' as company id, now searching for the company")
             company_name = self.search_companies(company_name)
-            self.session.headers['x-li-graphql-pegasus-client'] = "true"
             res = self.session.get(f"{self.company_id_ep}{company_name}")
-            self.session.headers.pop('x-li-graphql-pegasus-client','')
             if res.status_code != 200:
                 raise Exception(
                     f"Failed to find company after performing a direct and generic search for {company_name}",
@@ -110,7 +110,7 @@ class LinkedInScraper:
             raise Exception(f'Failed to load json in get_company_id_and_staff_count {res.text[:200]}')
 
         company = response_json["elements"][0]
-        self.domain = utils.extract_base_domain(company["companyPageUrl"])
+        self.domain = utils.extract_base_domain(company["companyPageUrl"]) if company.get('companyPageUrl') else None
         staff_count = company["staffCount"]
         company_id = company["trackingInfo"]["objectUrn"].split(":")[-1]
 

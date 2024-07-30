@@ -62,7 +62,7 @@ class EmployeeFetcher:
         emp.last_name = emp_dict["lastName"].split(',')[0]
         emp.potential_emails = utils.create_emails(
             emp.first_name, emp.last_name, self.domain
-        )
+        ) if self.domain else None
 
         emp.followers = emp_dict.get("followingState", {}).get("followerCount")
         emp.connections = emp_dict["connections"]["paging"]["total"]
