@@ -111,7 +111,7 @@ Optional
 |    solves the captcha using the desired service - either CapSolver, or 2Captcha (lower quality)
 |
 ├── solver_api_key (str): 
-|    api key for the solver sorvicer
+|    api key for the solver provider
 │
 ├── log_level (int): 
 |    Controls the verbosity of the runtime printouts 
