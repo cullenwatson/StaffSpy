@@ -34,10 +34,10 @@ staff = scrape_staff(
     # login credentials (remove these to sign in with browser)
     username="myemail@gmail.com",
     password="mypassword",
-    solver_api_key="CAP-6D6A8CE981803A309A0D531F8B4790BC", # in case hit with captcha on sign-in
+    
+    # in case hit with captcha on sign-in
+    solver_api_key="CAP-6D6A8CE981803A309A0D531F8B4790BC",
     solver_service=SolverType.CAPSOLVER,
-    
-    
 
     max_results=50, # can go up to 1000
     session_file=str(session_file), # save login cookies to only log in once (lasts a week or so)
