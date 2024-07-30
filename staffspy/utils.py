@@ -77,6 +77,8 @@ class Login:
             comment = code_tag.contents[0]
             extracted_code = str(comment).strip("<!--\"\"-->").strip()
             logger.debug("Extracted captcha blob:", extracted_code)
+        elif 'Please choose a more secure password.' in r.text:
+            raise Exception('linkedin is requiring a more secure password. reset pw and try again')
         else:
             raise BlobException('blob to solve captcha not found - rerunning the program usually solves this')
 
@@ -161,7 +163,9 @@ class Login:
         response = session.post(url, data=payload)
         data=response.json()
 
-        if data['login_result']=='CHALLENGE':
+        if data['login_result'] == 'BAD_USERNAME_OR_PASSWORD':
+            raise Exception('incorrect username or password')
+        elif data['login_result']=='CHALLENGE':
             self.solve_captcha(session,data,payload)
 
         session = set_csrf_token(session)
