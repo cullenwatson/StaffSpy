@@ -4,7 +4,6 @@ import re
 
 import staffspy.utils as utils
 from staffspy.exceptions import TooManyRequests
-from staffspy.models import Staff
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +40,7 @@ class EmployeeFetcher:
         self.parse_emp(base_staff, employee_json)
         return True
 
-    def parse_emp(self, emp: Staff, emp_dict: dict):
+    def parse_emp(self, emp, emp_dict):
         """Parse the employee data from the employee profile."""
         try:
             photo_data = emp_dict["profilePicture"]["displayImageReference"][
@@ -50,11 +49,10 @@ class EmployeeFetcher:
             photo_base_url = photo_data["rootUrl"]
             photo_ext_url = photo_data["artifacts"][-1]["fileIdentifyingUrlPathSegment"]
             profile_photo = f"{photo_base_url}{photo_ext_url}"
-        except:
+        except KeyError:
             profile_photo = None
 
         emp.profile_id = emp_dict["publicIdentifier"]
-        emp.is_connection=next(iter(emp_dict['memberRelationship']['memberRelationshipUnion'])) =='connection'
 
         emp.profile_link = f'https://www.linkedin.com/in/{emp_dict["publicIdentifier"]}'
 
@@ -68,18 +66,26 @@ class EmployeeFetcher:
         emp.followers = emp_dict.get("followingState", {}).get("followerCount")
         emp.connections = emp_dict["connections"]["paging"]["total"]
         emp.location = emp_dict["geoLocation"]["geo"]["defaultLocalizedName"]
-        emp.company = emp_dict["profileTopPosition"]["elements"][0]["companyName"]
-        edu_cards = emp_dict["profileTopEducation"]["elements"]
+
+        # Handle empty elements case for company
+        top_positions = emp_dict.get("profileTopPosition", {}).get("elements", [])
+        if top_positions:
+            emp.company = top_positions[0].get("companyName", None)
+        else:
+            emp.company = None
+
+        edu_cards = emp_dict.get("profileTopEducation", {}).get("elements", [])
         if edu_cards:
             emp.school = edu_cards[0].get(
                 "schoolName", edu_cards[0].get("school", {}).get("name")
             )
-        emp.influencer = emp_dict["influencer"]
-        emp.creator = emp_dict["creator"]
-        emp.premium = emp_dict["premium"]
+        emp.influencer = emp_dict.get("influencer", False)
+        emp.creator = emp_dict.get("creator", False)
+        emp.premium = emp_dict.get("premium", False)
         emp.mutual_connections = 0
+
         try:
-            profile_insight = emp_dict["profileInsight"]["elements"]
+            profile_insight = emp_dict.get("profileInsight", {}).get("elements", [])
             if profile_insight:
                 mutual_connections_str = profile_insight[0]["text"]["text"]
                 match = re.search(r"\d+", mutual_connections_str)
@@ -89,5 +95,5 @@ class EmployeeFetcher:
                     emp.mutual_connections = (
                         2 if " and " in mutual_connections_str else 1
                     )
-        except:
+        except KeyError:
             pass

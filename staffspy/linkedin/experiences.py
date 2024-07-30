@@ -44,30 +44,49 @@ class ExperiencesFetcher:
     def parse_experiences(self, elements):
         exps = []
         for elem in elements:
-            entity = elem["components"]["entityComponent"]
             try:
-                if (
-                    not entity["subComponents"]
-                    or not entity["subComponents"]["components"][0]["components"][
-                        "pagedListComponent"
-                    ]
-                ):
-                    emp_type = start_date=end_date=None
-                    duration = entity["caption"]["text"] if entity['caption'] else None
+                components = elem.get("components")
+                if components is None:
+                    continue
+
+                entity = components.get("entityComponent")
+                if entity is None:
+                    continue
+
+                sub_components = entity.get("subComponents")
+                if (sub_components is None or
+                        len(sub_components.get("components", [])) == 0 or
+                        sub_components["components"][0].get("components") is None or
+                        sub_components["components"][0]["components"].get("pagedListComponent") is None):
+
+                    emp_type = start_date = end_date = None
+
+                    caption = entity.get("caption")
+                    duration = caption.get("text") if caption else None
                     if duration:
                         start_date, end_date = utils.parse_dates(duration)
                         from_date, to_date = utils.parse_duration(duration)
                         if from_date:
-                            duration = duration.split(" · ")[1]
-                    company = entity["subtitle"]["text"] if entity["subtitle"] else None
-                    title = entity["titleV2"]["text"]["text"]
-                    location = (
-                        entity["metadata"]["text"] if entity["metadata"] else None
-                    )
-                    parts = company.split(" · ")
-                    if len(parts) > 1:
-                        company = parts[0]
-                        emp_type = parts[-1].lower()
+                            duration_parts = duration.split(" · ")
+                            if len(duration_parts) > 1:
+                                duration = duration_parts[1]
+
+                    subtitle = entity.get("subtitle")
+                    company = subtitle.get("text") if subtitle else None
+
+                    titleV2 = entity.get("titleV2")
+                    title_text = titleV2.get("text") if titleV2 else None
+                    title = title_text.get("text") if title_text else None
+
+                    metadata = entity.get("metadata")
+                    location = metadata.get("text") if metadata else None
+
+                    if company:
+                        parts = company.split(" · ")
+                        if len(parts) > 1:
+                            company = parts[0]
+                            emp_type = parts[-1].lower()
+
                     exp = Experience(
                         duration=duration,
                         title=title,
@@ -78,7 +97,6 @@ class ExperiencesFetcher:
                         location=location,
                     )
                     exps.append(exp)
-
                 else:
                     multi_exps = self.parse_multi_exp(entity)
                     exps += multi_exps
