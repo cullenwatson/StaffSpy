@@ -73,9 +73,10 @@ class LinkedInScraper:
             f"Searched company {company_name} on LinkedIn and found company id - '{company_name_id}' with company name - '{company_name_new}'")
         return company_name_id
 
-    def get_company_id(self, company_name):
-        """Get the company id and staff count from the company name."""
+    def fetch_or_search_company(self, company_name):
+        """Fetch the company details by name, or search if not found."""
         res = self.session.get(f"{self.company_id_ep}{company_name}")
+
         if res.status_code not in (200, 404):
             raise Exception(
                 f"Failed to find company {company_name}",
@@ -94,19 +95,28 @@ class LinkedInScraper:
                 )
 
         logger.debug(f"Fetched company {res.status_code}")
+        return res
+
+    def get_company_id_and_staff_count(self, company_name):
+        """Extract company id and staff count from the company details."""
+        res = self.fetch_or_search_company(company_name)
+
         try:
             response_json = res.json()
         except json.decoder.JSONDecodeError:
             logger.debug(res.text[:200])
-            raise Exception('Failed to load json in get_company_id', res.text[:200])
+            raise Exception('Failed to load json in get_company_id_and_staff_count', res.text[:200])
+
         company = response_json["elements"][0]
         self.domain = utils.extract_base_domain(company["companyPageUrl"])
         staff_count = company["staffCount"]
         company_id = company["trackingInfo"]["objectUrn"].split(":")[-1]
+
         try:
             company_name = re.search(r'/company/([^/]+)', company['url']).group(1)
         except:
             pass
+
         logger.info(f"Found company '{company_name}' with {staff_count} staff")
         return company_id, staff_count
 
@@ -293,7 +303,7 @@ class LinkedInScraper:
                         f"Stopping due to API rate limit exceeded for {tasks[future]}"
                     )
 
-    def fetch_company_id_from_user(self, user_id):
+    def fetch_comany_id_from_user(self, user_id):
         ep = self.get_company_from_user_ep.format(user_id=user_id)
         res = self.session.get(ep)
         try:
