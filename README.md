@@ -20,8 +20,6 @@ _Python version >= [3.10](https://www.python.org/downloads/release/python-3100/)
 
 ### Usage
 
-#### Requests login
-
 ```python
 from staffspy import scrape_staff, SolverType
 from pathlib import Path
@@ -52,14 +50,9 @@ filename = "staff.csv"
 staff.to_csv(filename, index=False)
 ```
 
-### Two login methods
-
-
-
-
 #### Browser login
 
-If that fails or you rather use a browser, install the browser add-on to StaffSpy .
+If you rather use a browser, install the browser add-on to StaffSpy .
 
 ```pip install staffspy[browser]```
 
