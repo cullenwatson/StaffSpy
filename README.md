@@ -38,7 +38,7 @@ staff = scrape_staff(
     ## config
     max_results=50, # can go up to 1000
     session_file=str(session_file), # save login cookies to only log in once (lasts a week or so)
-    log_level=1 # 0 for no logs
+    log_level=1, # 0 for no logs
     ##
 
     ## credentials - remove these to sign in with browser
