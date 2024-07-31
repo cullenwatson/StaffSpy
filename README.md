@@ -52,7 +52,7 @@ staff.to_csv(filename, index=False)
 
 #### Browser login
 
-If you rather use a browser, install the browser add-on to StaffSpy .
+If you rather use a browser to log in, install the browser add-on to StaffSpy .
 
 ```pip install staffspy[browser]```
 
