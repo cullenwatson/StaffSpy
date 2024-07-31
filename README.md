@@ -20,28 +20,33 @@ _Python version >= [3.10](https://www.python.org/downloads/release/python-3100/)
 
 ### Usage
 
+#### Requests login
+
 ```python
 from staffspy import scrape_staff, SolverType
 from pathlib import Path
 session_file = Path(__file__).resolve().parent / "session.pkl"
 
 staff = scrape_staff(
+    ## staff filters
     company_name="openai",
     search_term="software engineer",
     location="london",
     extra_profile_data=True, # fetch all past experiences, schools, & skills
-    
-    # login credentials (remove these to sign in with browser)
-    username="myemail@gmail.com",
-    password="mypassword",
-    
-    # in case hit with captcha on requests-based sign-in
-    solver_api_key="CAP-6D6A8CE981803A309A0D531F8B4790BC",
-    solver_service=SolverType.CAPSOLVER,
+    ##
 
+    ## config
     max_results=50, # can go up to 1000
     session_file=str(session_file), # save login cookies to only log in once (lasts a week or so)
-    log_level=1, # 0 for no logs
+    log_level=1 # 0 for no logs
+    ##
+
+    ## credentials - remove these to sign in with browser
+    username="myemail@gmail.com",
+    password="mypassword",
+    solver_api_key="CAP-6D6A8CE981803A309A0D531F8B4790BC", # optional but needed if hit with captcha
+    solver_service=SolverType.CAPSOLVER
+    ##
 )
 filename = "staff.csv"
 staff.to_csv(filename, index=False)
@@ -49,8 +54,7 @@ staff.to_csv(filename, index=False)
 
 ### Two login methods
 
-#### Requests login
-If you pass in a ```username``` & ```password```, it will sign in via LinkedIn api (you should disable 2fa for this method). If hit with a captcha, you need to pass ```capsolver_api_key``` for the third-party service to solve it. 
+
 
 
 #### Browser login
