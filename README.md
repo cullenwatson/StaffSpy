@@ -105,7 +105,7 @@ Optional
 |    linkedin account password
 |
 ├── solver_service (SolverType): 
-|    solves the captcha using the desired service - either CapSolver, or 2Captcha (tends to fail)
+|    solves the captcha using the desired service - either CapSolver, or 2Captcha (worse of the two)
 |
 ├── solver_api_key (str): 
 |    api key for the solver provider
@@ -138,16 +138,6 @@ Staff
 │   ├── followers
 │   ├── connections
 │   └── mutuals_count
-│
-├── Employment History
-│   ├── company
-│   ├── past_company1
-│   ├── past_company2
-│   ├── school
-│   ├── extra_school
-│   ├── top_skill_1
-│   ├── top_skill_2
-│   └── top_skill_3
 │
 ├── Status
 │   ├── influencer
