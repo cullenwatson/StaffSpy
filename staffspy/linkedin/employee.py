@@ -74,7 +74,7 @@ class EmployeeFetcher:
 
         emp.followers = emp_dict.get("followingState", {}).get("followerCount")
         emp.connections = emp_dict["connections"]["paging"]["total"]
-        emp.location = emp_dict.get("geoLocation",{}).get("geo",{}).get("defaultLocalizedName",{})
+        emp.location = emp_dict.get("geoLocation",{}).get("geo",{}).get("defaultLocalizedName",'')
 
         # Handle empty elements case for company
         top_positions = emp_dict.get("profileTopPosition", {}).get("elements", [])
