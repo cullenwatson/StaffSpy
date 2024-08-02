@@ -133,7 +133,7 @@ Optional
 
     - only 1000 max results per search
     - extra_profile_data increases runtime by O(n)
-    - if rate limited, the program will exit
+    - if rate limited, the program will stop scraping
 
 
 ### Staff Schema
