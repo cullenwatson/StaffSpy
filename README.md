@@ -134,6 +134,7 @@ Optional
     - only 1000 max results per search
     - extra_profile_data increases runtime by O(n)
     - if rate limited, the program will stop scraping
+    - if using non-browser sign in, turn off 2fa
 
 
 ### Staff Schema
