@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "staffspy"
-version = "0.2.7"
+version = "0.2.8"
 description = "Staff scraper library for LinkedIn"
 authors = ["Cullen Watson <cullen@bunsly.com>"]
 readme = "README.md"
