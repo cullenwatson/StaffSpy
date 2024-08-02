@@ -1,9 +1,9 @@
 import json
 import logging
 
-from staffspy.exceptions import TooManyRequests
-from staffspy.models import School
-from staffspy.utils import parse_dates
+from staffspy.utils.exceptions import TooManyRequests
+from staffspy.utils.models import School
+from staffspy.utils.utils import parse_dates
 
 logger = logging.getLogger(__name__)
 

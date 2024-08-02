@@ -16,7 +16,7 @@ class CapSolver(Solver):
 
     @retry(stop=stop_after_attempt(10), retry=retry_if_result(is_none))
     def solve(self, blob_data: str, page_url: str=None):
-        from staffspy.utils import logger
+        from staffspy.utils.utils import logger
         logger.info(f'Waiting on CapSolver to solve captcha...')
 
         payload = {
