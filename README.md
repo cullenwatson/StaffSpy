@@ -26,7 +26,7 @@ from staffspy import LinkedInAccount, SolverType
 
 session_file = Path(__file__).resolve().parent / "session.pkl"
 account = LinkedInAccount(
-    ## credentials - remove these to sign in with browser
+    # credentials - remove these to sign in with browser
     username="myemail@gmail.com",
     password="mypassword",
     solver_api_key="CAP-6D6A8CE981803A309A0D531F8B4790BC", # optional but needed if hit with captcha
