@@ -1,5 +1,6 @@
 from abc import ABC,abstractmethod
 
+
 class Solver(ABC):
     public_key = "3117BF26-4762-4F5A-8ED9-A85E69209A46"
     page_url = "https://iframe.arkoselabs.com"

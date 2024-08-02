@@ -1,5 +1,5 @@
 """
-staffspy.linkedin
+staffspy.linkedin.linkedin
 ~~~~~~~~~~~~~~~~~~~
 
 This module contains routines to scrape LinkedIn.
@@ -12,16 +12,16 @@ from urllib.parse import quote
 
 import requests
 
-import staffspy.utils as utils
-from staffspy.exceptions import TooManyRequests, BadCookies, GeoUrnNotFound
+import staffspy.utils.utils as utils
+from staffspy.utils.exceptions import TooManyRequests, BadCookies, GeoUrnNotFound
 from staffspy.linkedin.certifications import CertificationFetcher
 from staffspy.linkedin.employee import EmployeeFetcher
 from staffspy.linkedin.employee_bio import EmployeeBioFetcher
 from staffspy.linkedin.experiences import ExperiencesFetcher
 from staffspy.linkedin.schools import SchoolsFetcher
 from staffspy.linkedin.skills import SkillsFetcher
-from staffspy.models import Staff
-from staffspy.utils import logger
+from staffspy.utils.models import Staff
+from staffspy.utils.utils import logger
 
 
 class LinkedInScraper:
@@ -29,7 +29,7 @@ class LinkedInScraper:
     company_id_ep = "https://www.linkedin.com/voyager/api/organization/companies?q=universalName&universalName="
     company_search_ep = "https://www.linkedin.com/voyager/api/graphql?queryId=voyagerSearchDashClusters.02af3bc8bc85a169bb76bb4805d05759&queryName=SearchClusterCollection&variables=(query:(flagshipSearchIntent:SEARCH_SRP,keywords:{company},includeFiltersInResponse:false,queryParameters:(keywords:List({company}),resultType:List(COMPANIES))),count:10,origin:GLOBAL_SEARCH_HEADER,start:0)"
     location_id_ep = "https://www.linkedin.com/voyager/api/graphql?queryId=voyagerSearchDashReusableTypeahead.57a4fa1dd92d3266ed968fdbab2d7bf5&queryName=SearchReusableTypeaheadByType&variables=(query:(showFullLastNameForConnections:false,typeaheadFilterQuery:(geoSearchTypes:List(MARKET_AREA,COUNTRY_REGION,ADMIN_DIVISION_1,CITY))),keywords:{location},type:GEO,start:0)"
-    get_company_from_user_ep = "https://www.linkedin.com/voyager/api/identity/profiles/{user_id}/profileView"
+    public_user_id_ep = "https://www.linkedin.com/voyager/api/identity/profiles/{user_id}/profileView"
 
     def __init__(self, session: requests.Session):
         self.session = session
@@ -138,7 +138,7 @@ class LinkedInScraper:
                 linkedin_id = match.group(1)
 
                 name = person["title"]["text"].strip()
-                position = (
+                headline = (
                     person.get("primarySubtitle", {}).get("text", "")
                     if person.get("primarySubtitle")
                     else ""
@@ -147,7 +147,7 @@ class LinkedInScraper:
                     Staff(
                         id=linkedin_id,
                         name=name,
-                        position=position,
+                        headline=headline,
                         search_term=" - ".join(
                             filter(
                                 None,
@@ -272,7 +272,7 @@ class LinkedInScraper:
             try:
                 for i, employee in enumerate(non_restricted, start=1):
                     self.fetch_all_info_for_employee(employee, i)
-            except (BadCookies, TooManyRequests) as e:
+            except TooManyRequests as e:
                 logger.error(str(e))
 
         return reduced_staff_list
@@ -283,38 +283,42 @@ class LinkedInScraper:
             f"Fetching employee data for {employee.id} {index} / {self.num_staff}"
         )
 
-        with ThreadPoolExecutor(max_workers=5) as executor:
-            tasks = {}
-            tasks[
-                executor.submit(self.employees.fetch_employee, employee, self.domain)
-            ] = "employee"
-            tasks[executor.submit(self.skills.fetch_skills, employee)] = "skills"
-            tasks[executor.submit(self.experiences.fetch_experiences, employee)] = (
-                "experiences"
-            )
-            tasks[executor.submit(self.certs.fetch_certifications, employee)] = (
-                "certifications"
-            )
-            tasks[executor.submit(self.schools.fetch_schools, employee)] = "schools"
-            tasks[executor.submit(self.bio.fetch_employee_bio, employee)] = "bio"
+        with ThreadPoolExecutor(max_workers=6) as executor:
+            tasks = {executor.submit(self.employees.fetch_employee, employee, self.domain): "employee",
+                     executor.submit(self.skills.fetch_skills, employee): "skills",
+                     executor.submit(self.experiences.fetch_experiences, employee): (
+                         "experiences"
+                     ), executor.submit(self.certs.fetch_certifications, employee): (
+                    "certifications"
+                ), executor.submit(self.schools.fetch_schools, employee): "schools",
+                     executor.submit(self.bio.fetch_employee_bio, employee): "bio"}
 
             for future in as_completed(tasks):
                 result = future.result()
-                if isinstance(result, TooManyRequests):
-                    logger.debug(f"API rate limit exceeded for {tasks[future]}")
-                    raise TooManyRequests(
-                        f"Stopping due to API rate limit exceeded for {tasks[future]}"
-                    )
 
-    def fetch_company_id_from_user(self, user_id: str):
-        ep = self.get_company_from_user_ep.format(user_id=user_id)
-        res = self.session.get(ep)
+    def fetch_user_profile_data_from_public_id(self, user_id: str, key: str):
+        """Fetches data given the public LinkedIn user id"""
+        endpoint = self.public_user_id_ep.format(user_id=user_id)
+        response = self.session.get(endpoint)
+
         try:
-            res_json = res.json()
+            response_json = response.json()
         except json.decoder.JSONDecodeError:
-            logger.debug(res.text[:200])
-            raise Exception(f'Failed to load json in fetch_comany_id_from_user', res.status_code)
+            logger.debug(response.text[:200])
+            raise Exception(f'Failed to load JSON from endpoint', response.status_code, response.reason)
+
+        keys = {
+            'user_id': ('positionView', 'profileId'),
+            'company_id': ('positionView', 'elements', 0, 'company', 'miniCompany', 'universalName')
+        }
+
         try:
-            return res_json['positionView']['elements'][0]['company']['miniCompany']['universalName']
-        except:
-            raise Exception(f'Failed to fetch company for user_id {user_id}')
+            data = response_json
+            for k in keys[key]:
+                data = data[k]
+            return data
+        except (KeyError, TypeError, IndexError) as e:
+            logger.warning(f"Failed to find user_id {user_id}")
+            if key=='user_id':
+                return ''
+            raise Exception(f"Failed to fetch '{key}' for user_id {user_id}: {e}")

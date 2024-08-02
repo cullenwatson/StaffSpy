@@ -12,7 +12,7 @@ class TwoCaptchaSolver(Solver):
     @retry(stop=stop_after_attempt(5), retry=retry_if_exception_type((TimeoutException, ApiException)))
     def solve(self, blob_data: str, page_url:str=None):
         super().solve(blob_data, page_url)
-        from staffspy.utils import logger
+        from staffspy.utils.utils import logger
 
         logger.info(f'Waiting on 2Captcha to solve captcha attempt {self.attempt} / 5 ...')
         self.attempt+=1

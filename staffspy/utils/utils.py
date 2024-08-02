@@ -2,7 +2,6 @@ import logging
 import os
 import pickle
 import re
-import time
 from datetime import datetime
 from urllib.parse import quote
 from dateutil.parser import parse
@@ -12,7 +11,7 @@ import tldextract
 from bs4 import BeautifulSoup
 from tenacity import stop_after_attempt, retry_if_exception_type, retry, RetryError
 
-from staffspy.exceptions import BlobException
+from staffspy.utils.exceptions import BlobException
 from staffspy.solvers.solver import Solver
 
 logger = logging.getLogger("StaffSpy")
@@ -199,6 +198,7 @@ class Login:
             pickle.dump(data, f)
 
     def load_session(self):
+        """Load session from session file, otherwise login"""
         session=None
         if not self.session_file or not os.path.exists(self.session_file):
             if self.username and self.password:
