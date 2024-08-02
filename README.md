@@ -21,33 +21,35 @@ _Python version >= [3.10](https://www.python.org/downloads/release/python-3100/)
 ### Usage
 
 ```python
-from staffspy import scrape_staff, SolverType
+from staffspy import LinkedInAccount, SolverType
 from pathlib import Path
+
 session_file = Path(__file__).resolve().parent / "session.pkl"
-
-staff = scrape_staff(
-    ## staff filters
-    company_name="openai",
-    search_term="software engineer",
-    location="london",
-    extra_profile_data=True, # fetch all past experiences, schools, & skills
-    ##
-
-    ## config
-    max_results=50, # can go up to 1000
-    session_file=str(session_file), # save login cookies to only log in once (lasts a week or so)
-    log_level=1, # 0 for no logs
-    ##
-
+account = LinkedInAccount(
     ## credentials - remove these to sign in with browser
     username="myemail@gmail.com",
     password="mypassword",
     solver_api_key="CAP-6D6A8CE981803A309A0D531F8B4790BC", # optional but needed if hit with captcha
-    solver_service=SolverType.CAPSOLVER
-    ##
+    solver_service=SolverType.CAPSOLVER,
+    
+    session_file=str(session_file), # save login cookies to only log in once (lasts a week or so)
+    log_level=1, # 0 for no logs
 )
-filename = "staff.csv"
-staff.to_csv(filename, index=False)
+
+# search by company
+staff = account.scrape_staff(
+    company_name="openai",
+    search_term="software engineer",
+    location="london",
+    extra_profile_data=True, # fetch all past experiences, schools, & skills
+    max_results=50, # can go up to 1000
+)
+# or fetch by user ids
+users = account.scrape_users(
+    user_ids=['williamhgates', 'rbranson', 'jeffweiner08']
+)
+staff.to_csv("staff.csv", index=False)
+users.to_csv("users.csv", index=False)
 ```
 
 #### Browser login

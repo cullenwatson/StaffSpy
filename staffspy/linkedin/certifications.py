@@ -1,8 +1,8 @@
 import json
 import logging
 
-from staffspy.exceptions import TooManyRequests
-from staffspy.models import Certification
+from staffspy.utils.exceptions import TooManyRequests
+from staffspy.utils.models import Certification
 
 logger = logging.getLogger(__name__)
 

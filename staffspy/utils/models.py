@@ -2,7 +2,7 @@ from datetime import datetime, date
 
 from pydantic import BaseModel
 
-from staffspy.utils import extract_emails_from_text
+from staffspy.utils.utils import extract_emails_from_text
 
 
 class School(BaseModel):
@@ -72,8 +72,9 @@ class Experience(BaseModel):
 class Staff(BaseModel):
     search_term: str
     id: str
-    name: str
-    position: str | None = None
+    name: str | None = None
+    headline: str | None = None
+    current_position: str | None = None
 
     profile_id: str | None = None
     profile_link: str | None = None
@@ -92,6 +93,7 @@ class Staff(BaseModel):
     influencer: bool | None = None
     creator: bool | None = None
     premium: bool | None = None
+    open_to_work: bool | None = None
     profile_photo: str | None = None
     skills: list[Skill] | None = None
     experiences: list[Experience] | None = None
@@ -132,17 +134,19 @@ class Staff(BaseModel):
 
         top_three_companies += [None] * (3 - len(top_three_companies))
         top_three_skills=self.get_top_skills()
+        name = filter(None, [self.first_name, self.last_name])
 
         self.emails_in_bio=extract_emails_from_text(self.bio) if self.bio else None
+        self.current_position = sorted_experiences[0].title if len(sorted_experiences) > 0 and sorted_experiences[0].end_date is None else None
         return {
             "search_term": self.search_term,
             "id": self.id,
             "profile_id": self.profile_id,
-            "name": self.name,
+            "name": self.name if self.name else ' '.join(name) if name else None,
             "first_name": self.first_name,
             "last_name": self.last_name,
             "location": self.location,
-            "position": self.position,
+            "headline": self.headline,
             "estimated_age": estimated_age,
             "followers": self.followers,
             "connections": self.connections,
@@ -151,14 +155,16 @@ class Staff(BaseModel):
             "premium": self.premium,
             "creator": self.creator,
             "influencer": self.influencer,
-            "company_1": top_three_companies[0],
-            "company_2": top_three_companies[1],
-            "company_3": top_three_companies[2],
+            "open_to_work": self.open_to_work,
+            "current_position":self.current_position,
+            "current_company": top_three_companies[0],
+            "past_company_1": top_three_companies[1],
+            "past_company_2": top_three_companies[2],
             "school_1": top_three_school_names[0],
             "school_2": top_three_school_names[1],
-            "skill_1": top_three_skills[0],
-            "skill_2": top_three_skills[1],
-            "skill_3": top_three_skills[2],
+            "top_skill_1": top_three_skills[0],
+            "top_skill_2": top_three_skills[1],
+            "top_skill_3": top_three_skills[2],
             "bio": self.bio,
             "experiences": (
                 [exp.to_dict() for exp in self.experiences]
