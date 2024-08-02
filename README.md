@@ -124,7 +124,6 @@ Optional
 ### Parameters for `scrape_users()`
 
 ```plaintext
-Optional
 ├── user_ids (list):
 |    user ids to scrape from
 |     e.g. dougmcmillon from https://www.linkedin.com/in/dougmcmillon
