@@ -8,7 +8,7 @@ This module contains routines to scrape LinkedIn.
 import json
 import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from urllib.parse import quote
+from urllib.parse import quote, unquote
 
 import requests
 
@@ -64,17 +64,21 @@ class LinkedInScraper:
                 res.text[:200],
             )
         logger.debug(f"Searched companies {res.status_code}")
+        companies = res.json()['data']['searchDashClustersByAll']['elements']
+        if len(companies) < 2:
+            raise Exception(f'No companies found for name {company_name}, Response: {res.text[:200]}')
+        metadata, first_company = companies[:2]
         try:
-            first_company = res.json()['data']['searchDashClustersByAll']['elements'][1]['items'][0]['item'][
-                'entityResult']
+            num_results = metadata['items'][0]['item']['simpleTextV2']['text']['text']
+            first_company = companies[1]['items'][0]['item']['entityResult']
             company_link = first_company['navigationUrl']
-            company_name_id = re.search(r'/company/([^/]+)', company_link).group(1)
+            company_name_id = unquote(re.search(r'/company/([^/]+)', company_link).group(1))
             company_name_new = first_company['title']['text']
         except Exception as e:
             raise Exception(f'Failed to load json in search_companies {str(e)}, Response: {res.text[:200]}')
 
         logger.info(
-            f"Searched company {company_name} on LinkedIn and found company id - '{company_name_id}' with company name - '{company_name_new}'")
+            f"Searched company {company_name} on LinkedIn and were {num_results}, using first result with company name - '{company_name_new}' and company id - '{company_name_id}'")
         return company_name_id
 
     def fetch_or_search_company(self, company_name):
@@ -115,11 +119,7 @@ class LinkedInScraper:
         self.domain = utils.extract_base_domain(company["companyPageUrl"]) if company.get('companyPageUrl') else None
         staff_count = company["staffCount"]
         company_id = company["trackingInfo"]["objectUrn"].split(":")[-1]
-
-        try:
-            company_name = company["universalName"]
-        except:
-            pass
+        company_name = company["universalName"]
 
         logger.info(f"Found company '{company_name}' with {staff_count} staff")
         return company_id, staff_count
@@ -205,7 +205,7 @@ class LinkedInScraper:
         try:
             res_json = res.json()
         except json.decoder.JSONDecodeError:
-            if res.reason=='INKApi Error':
+            if res.reason == 'INKApi Error':
                 raise Exception('Delete session file and log in again', res.status_code, res.text[:200], res.reason)
             raise GeoUrnNotFound("Failed to send request to get geo id", res.status_code, res.text[:200], res.reason)
 
@@ -319,6 +319,6 @@ class LinkedInScraper:
             return data
         except (KeyError, TypeError, IndexError) as e:
             logger.warning(f"Failed to find user_id {user_id}")
-            if key=='user_id':
+            if key == 'user_id':
                 return ''
             raise Exception(f"Failed to fetch '{key}' for user_id {user_id}: {e}")
