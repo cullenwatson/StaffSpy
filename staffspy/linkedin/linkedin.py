@@ -117,7 +117,7 @@ class LinkedInScraper:
         company_id = company["trackingInfo"]["objectUrn"].split(":")[-1]
 
         try:
-            company_name = re.search(r'/company/([^/]+)', company['url']).group(1)
+            company_name = company["universalName"]
         except:
             pass
 
