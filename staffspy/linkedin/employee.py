@@ -43,16 +43,18 @@ class EmployeeFetcher:
 
     def parse_emp(self, emp: Staff, emp_dict: dict):
         """Parse the employee data from the employee profile."""
-        try:
-            photo_data = emp_dict["profilePicture"]["displayImageReference"][
-                "vectorImage"
-            ]
-            photo_base_url = photo_data["rootUrl"]
-            photo_ext_url = photo_data["artifacts"][-1]["fileIdentifyingUrlPathSegment"]
-            profile_photo = f"{photo_base_url}{photo_ext_url}"
-        except (KeyError, TypeError, IndexError, ValueError) as e:
-            profile_photo = None
 
+        def get_photo_url(emp_dict: dict, key: str):
+            try:
+                photo_data = emp_dict[key]["displayImageReference"]["vectorImage"]
+                photo_base_url = photo_data["rootUrl"]
+                photo_ext_url = photo_data["artifacts"][-1]["fileIdentifyingUrlPathSegment"]
+                return f"{photo_base_url}{photo_ext_url}"
+            except (KeyError, TypeError, IndexError, ValueError):
+                return None
+
+        emp.profile_photo = get_photo_url(emp_dict, "profilePicture")
+        emp.banner_photo = get_photo_url(emp_dict, "backgroundPicture")
         emp.profile_id = emp_dict["publicIdentifier"]
         try:
             emp.headline = emp_dict.get('headline')
@@ -62,10 +64,10 @@ class EmployeeFetcher:
             pass
         emp.is_connection = next(iter(emp_dict['memberRelationship']['memberRelationshipUnion'])) == 'connection'
         emp.open_to_work = emp_dict['profilePicture'].get('frameType')=='OPEN_TO_WORK'
+        emp.is_hiring = emp_dict['profilePicture'].get('frameType')=='HIRING'
 
         emp.profile_link = f'https://www.linkedin.com/in/{emp_dict["publicIdentifier"]}'
 
-        emp.profile_photo = profile_photo
         emp.first_name = emp_dict["firstName"]
         emp.last_name = emp_dict["lastName"].split(',')[0]
         emp.potential_emails = utils.create_emails(
