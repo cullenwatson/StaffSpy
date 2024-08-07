@@ -23,11 +23,13 @@ class School(BaseModel):
 class Skill(BaseModel):
     name: str | None = None
     endorsements: int | None = None
+    passed_assessment: bool | None = None
 
     def to_dict(self):
         return {
             "name": self.name,
             "endorsements": self.endorsements if self.endorsements else 0,
+            "passed_assessment": self.passed_assessment
         }
 
 
@@ -94,7 +96,9 @@ class Staff(BaseModel):
     creator: bool | None = None
     premium: bool | None = None
     open_to_work: bool | None = None
+    is_hiring: bool | None = None
     profile_photo: str | None = None
+    banner_photo: str | None = None
     skills: list[Skill] | None = None
     experiences: list[Experience] | None = None
     certifications: list[Certification] | None = None
@@ -156,6 +160,7 @@ class Staff(BaseModel):
             "creator": self.creator,
             "influencer": self.influencer,
             "open_to_work": self.open_to_work,
+            "is_hiring": self.is_hiring,
             "current_position":self.current_position,
             "current_company": top_three_companies[0],
             "past_company_1": top_three_companies[1],
@@ -186,6 +191,7 @@ class Staff(BaseModel):
             "potential_emails": ', '.join(self.potential_emails) if self.potential_emails else None,
             "profile_link": self.profile_link,
             "profile_photo": self.profile_photo,
+            "banner_photo": self.banner_photo,
         }
 
     def estimate_age_based_on_education(self):

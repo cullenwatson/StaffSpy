@@ -76,7 +76,7 @@ class LinkedInAccount:
         linkedin_member_df = staff_df[staff_df["name"] == "LinkedIn Member"]
         non_linkedin_member_df = staff_df[staff_df["name"] != "LinkedIn Member"]
         staff_df = pd.concat([non_linkedin_member_df, linkedin_member_df])
-        logger.info(f"Scraped {len(staff_df)} staff members from {company_name}")
+        logger.info(f"Scraped {len(staff_df)} staff members from {company_name}, with {len(linkedin_member_df)} hidden LinkedIn users")
         return staff_df
 
     def scrape_users(

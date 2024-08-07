@@ -43,18 +43,23 @@ class SkillsFetcher:
                 "components"
             ]["elements"]
             for elem in elems:
+                passed_assessment,endorsements = None,0
                 entity = elem["components"]["entityComponent"]
                 name = entity["titleV2"]["text"]["text"]
                 if name in names:
                     continue
                 names.add(name)
-                try:
-                    endorsements = int(
-                        entity["subComponents"]["components"][0]["components"][
-                            "insightComponent"
-                        ]["text"]["text"]["text"].replace(" endorsements", "")
-                    )
-                except:
-                    endorsements = 0
-                skills.append(Skill(name=name, endorsements=endorsements))
+                components = entity["subComponents"]["components"]
+                for component in components:
+
+                    try:
+                        candidate = component["components"]["insightComponent"]["text"]["text"]["text"]
+                        if " endorsements" in candidate:
+                            endorsements = int(candidate.replace(" endorsements", ""))
+                        if "Passed LinkedIn Skill Assessment" in candidate:
+                            passed_assessment = True
+                    except:
+                        pass
+
+                skills.append(Skill(name=name, endorsements=endorsements, passed_assessment=passed_assessment))
         return skills
