@@ -166,10 +166,13 @@ Staff
 │   ├── influencer
 │   ├── creator
 │   ├── premium
+│   ├── open_to_work
+│   ├── is_hiring
 │   └── is_connection
 │
 ├── Visuals
-│   └── profile_photo
+│   ├── profile_photo
+│   └── banner_photo
 │
 ├── Skills
 │   ├── name
