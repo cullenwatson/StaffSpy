@@ -13,7 +13,7 @@
 ### Installation
 
 ```
-pip install -U staffspy
+pip install -U staffspy[browser]
 ```
 
 _Python version >= [3.10](https://www.python.org/downloads/release/python-3100/) required_
@@ -26,11 +26,11 @@ from staffspy import LinkedInAccount, SolverType
 
 session_file = Path(__file__).resolve().parent / "session.pkl"
 account = LinkedInAccount(
-    # credentials - remove these to sign in with browser
-    username="myemail@gmail.com",
-    password="mypassword",
-    solver_api_key="CAP-6D6A8CE981803A309A0D531F8B4790BC", # optional but needed if hit with captcha
-    solver_service=SolverType.CAPSOLVER,
+    # commenting these out because the captcha services are not reliable at the moment, so sign in with browser
+    # username="myemail@gmail.com",
+    # password="mypassword",
+    # solver_api_key="CAP-6D6A8CE981803A309A0D531F8B4790BC", # optional but needed if hit with captcha
+    # solver_service=SolverType.CAPSOLVER,
 
     session_file=str(session_file), # save login cookies to only log in once (lasts a week or so)
     log_level=1, # 0 for no logs
@@ -58,7 +58,7 @@ If you rather use a browser to log in, install the browser add-on to StaffSpy .
 
 `pip install staffspy[browser]`
 
-Do not pass the `username` & `password` params, then a browser will open to sign in to LinkedIn on the first sign-in. Press enter after signing in to begin scraping.
+If you do not pass the `username` & `password` params, then a browser will open to sign in to LinkedIn on the first sign-in. Press enter after signing in to begin scraping.
 
 ### Output
 
