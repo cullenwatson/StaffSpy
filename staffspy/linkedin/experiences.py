@@ -17,9 +17,16 @@ class ExperiencesFetcher:
         ep = self.endpoint.format(employee_id=staff.id)
         res = self.session.get(ep)
         logger.debug(f"exps, status code - {res.status_code}")
-        if res.status_code == 429:
+        if res.reason == "INKApi Error":
+            raise Exception(
+                "Delete session file and log in again",
+                res.status_code,
+                res.text[:200],
+                res.reason,
+            )
+        elif res.status_code == 429:
             return TooManyRequests("429 Too Many Requests")
-        if not res.ok:
+        elif not res.ok:
             logger.debug(res.text[:200])
             return False
         try:
@@ -54,10 +61,15 @@ class ExperiencesFetcher:
                     continue
 
                 sub_components = entity.get("subComponents")
-                if (sub_components is None or
-                        len(sub_components.get("components", [])) == 0 or
-                        sub_components["components"][0].get("components") is None or
-                        sub_components["components"][0]["components"].get("pagedListComponent") is None):
+                if (
+                    sub_components is None
+                    or len(sub_components.get("components", [])) == 0
+                    or sub_components["components"][0].get("components") is None
+                    or sub_components["components"][0]["components"].get(
+                        "pagedListComponent"
+                    )
+                    is None
+                ):
 
                     emp_type = start_date = end_date = None
 
