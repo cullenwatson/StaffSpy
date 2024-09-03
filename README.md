@@ -26,11 +26,11 @@ from staffspy import LinkedInAccount, SolverType
 
 session_file = Path(__file__).resolve().parent / "session.pkl"
 account = LinkedInAccount(
-    # commenting these out because the captcha services are not reliable at the moment, so sign in with browser
+    # commenting these out because 2Captcha is not reliable, so sign in with browser
     # username="myemail@gmail.com",
     # password="mypassword",
-    # solver_api_key="CAP-6D6A8CE981803A309A0D531F8B4790BC", # optional but needed if hit with captcha
-    # solver_service=SolverType.CAPSOLVER,
+    # solver_api_key="your-api-key",
+    # solver_service=SolverType.TWO_CAPTCHA,
 
     session_file=str(session_file), # save login cookies to only log in once (lasts a week or so)
     log_level=1, # 0 for no logs
