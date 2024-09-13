@@ -40,7 +40,13 @@ def extract_base_domain(url: str):
 def create_emails(first, last, domain):
     first = "".join(filter(str.isalpha, first)).lower()
     last = "".join(filter(str.isalpha, last)).lower()
-    emails = [f"{first}.{last}@{domain}", f"{first[0]}{last}@{domain}"]
+    emails = [
+        f"{first}.{last}@{domain}",
+        f"{first[:1]}{last}@{domain}",
+        f"{first[:2]}{last}@{domain}",
+        f"{first}{last[:1]}@{domain}",
+        f"{first}{last[:2]}@{domain}",
+    ]
     return emails
 
 
@@ -49,7 +55,9 @@ def get_webdriver():
         from selenium import webdriver
         from selenium.common.exceptions import WebDriverException
     except ImportError as e:
-        raise Exception('install package `pip install staffspy[browser]` to login with browser')
+        raise Exception(
+            "install package `pip install staffspy[browser]` to login with browser"
+        )
 
     for browser in [webdriver.Chrome, webdriver.Firefox]:
         try:
@@ -61,76 +69,97 @@ def get_webdriver():
 
 class Login:
 
-    def __init__(self, username: str,password: str, solver: Solver, session_file: str):
-        self.username,self.password,self.solver,self.session_file=username,password,solver,session_file
+    def __init__(self, username: str, password: str, solver: Solver, session_file: str):
+        self.username, self.password, self.solver, self.session_file = (
+            username,
+            password,
+            solver,
+            session_file,
+        )
 
-    def solve_captcha(self, session,data,payload):
-        url=data['challenge_url']
-        r=session.post(url, data=payload)
+    def solve_captcha(self, session, data, payload):
+        url = data["challenge_url"]
+        r = session.post(url, data=payload)
 
-        soup = BeautifulSoup(r.text, 'html.parser')
+        soup = BeautifulSoup(r.text, "html.parser")
 
-        code_tag = soup.find('code', id='securedDataExchange')
+        code_tag = soup.find("code", id="securedDataExchange")
 
-        logger.info('Searching for captcha blob in linkedin to begin captcha solving')
+        logger.info("Searching for captcha blob in linkedin to begin captcha solving")
         if code_tag:
             comment = code_tag.contents[0]
-            extracted_code = str(comment).strip("<!--\"\"-->").strip()
+            extracted_code = str(comment).strip('<!--""-->').strip()
             logger.debug("Extracted captcha blob:", extracted_code)
-        elif 'Please choose a more secure password.' in r.text:
-            raise Exception('linkedin is requiring a more secure password. reset pw and try again')
+        elif "Please choose a more secure password." in r.text:
+            raise Exception(
+                "linkedin is requiring a more secure password. reset pw and try again"
+            )
         else:
-            raise BlobException('blob to solve captcha not found - rerunning the program usually solves this')
+            raise BlobException(
+                "blob to solve captcha not found - rerunning the program usually solves this"
+            )
 
         if not self.solver:
-            raise Exception('captcha hit - provide solver_api_key and solver_service name to solve or switch to the browser-based login with `pip install staffspy[browser]`')
-        token = self.solver.solve(extracted_code,url)
+            raise Exception(
+                "captcha hit - provide solver_api_key and solver_service name to solve or switch to the browser-based login with `pip install staffspy[browser]`"
+            )
+        token = self.solver.solve(extracted_code, url)
         if not token:
-            raise Exception('failed to solve captcha after 10 attempts')
+            raise Exception("failed to solve captcha after 10 attempts")
 
-        captcha_site_key = soup.find('input', {'name': 'captchaSiteKey'})['value']
-        challenge_id = soup.find('input', {'name': 'challengeId'})['value']
-        challenge_data = soup.find('input', {'name': 'challengeData'})['value']
-        challenge_details = soup.find('input', {'name': 'challengeDetails'})['value']
-        challenge_type = soup.find('input', {'name': 'challengeType'})['value']
-        challenge_source = soup.find('input', {'name': 'challengeSource'})['value']
-        request_submission_id = soup.find('input', {'name': 'requestSubmissionId'})['value']
-        display_time = soup.find('input', {'name': 'displayTime'})['value']
-        page_instance = soup.find('input', {'name': 'pageInstance'})['value']
-        failure_redirect_uri = soup.find('input', {'name': 'failureRedirectUri'})['value']
-        sign_in_link = soup.find('input', {'name': 'signInLink'})['value']
-        join_now_link = soup.find('input', {'name': 'joinNowLink'})['value']
+        captcha_site_key = soup.find("input", {"name": "captchaSiteKey"})["value"]
+        challenge_id = soup.find("input", {"name": "challengeId"})["value"]
+        challenge_data = soup.find("input", {"name": "challengeData"})["value"]
+        challenge_details = soup.find("input", {"name": "challengeDetails"})["value"]
+        challenge_type = soup.find("input", {"name": "challengeType"})["value"]
+        challenge_source = soup.find("input", {"name": "challengeSource"})["value"]
+        request_submission_id = soup.find("input", {"name": "requestSubmissionId"})[
+            "value"
+        ]
+        display_time = soup.find("input", {"name": "displayTime"})["value"]
+        page_instance = soup.find("input", {"name": "pageInstance"})["value"]
+        failure_redirect_uri = soup.find("input", {"name": "failureRedirectUri"})[
+            "value"
+        ]
+        sign_in_link = soup.find("input", {"name": "signInLink"})["value"]
+        join_now_link = soup.find("input", {"name": "joinNowLink"})["value"]
         for cookie in session.cookies:
-            if cookie.name == 'JSESSIONID':
-                jsession_value = cookie.value.split('ajax:')[1].strip('"')
+            if cookie.name == "JSESSIONID":
+                jsession_value = cookie.value.split("ajax:")[1].strip('"')
                 break
         else:
-            raise Exception('jsessionid not found, raise issue on GitHub')
-        csrf_token=f"ajax:{jsession_value}"
+            raise Exception("jsessionid not found, raise issue on GitHub")
+        csrf_token = f"ajax:{jsession_value}"
         payload = {
-            "csrfToken":csrf_token,
-            "captchaSiteKey":captcha_site_key,
-            "challengeId":challenge_id,
-            "language":"en-US",
-            "displayTime":display_time,
-            "challengeType":challenge_type,
-            "challengeSource":challenge_source,
-            "requestSubmissionId":request_submission_id,
-            "captchaUserResponseToken":token,
-            "challengeData":challenge_data,
-            "pageInstance":page_instance,
-            "challengeDetails":challenge_details,
-            "failureRedirectUri":failure_redirect_uri,
-            "signInLink":sign_in_link,
-            "joinNowLink":join_now_link,
-            "_s":"CONSUMER_LOGIN"
+            "csrfToken": csrf_token,
+            "captchaSiteKey": captcha_site_key,
+            "challengeId": challenge_id,
+            "language": "en-US",
+            "displayTime": display_time,
+            "challengeType": challenge_type,
+            "challengeSource": challenge_source,
+            "requestSubmissionId": request_submission_id,
+            "captchaUserResponseToken": token,
+            "challengeData": challenge_data,
+            "pageInstance": page_instance,
+            "challengeDetails": challenge_details,
+            "failureRedirectUri": failure_redirect_uri,
+            "signInLink": sign_in_link,
+            "joinNowLink": join_now_link,
+            "_s": "CONSUMER_LOGIN",
         }
-        encoded_payload = {key: f'{quote(str(value), "")}' for key, value in payload.items()}
-        query_string = '&'.join([f'{key}={value}' for key, value in encoded_payload.items()])
-        response=session.post("https://www.linkedin.com/checkpoint/challenge/verify", data=query_string)
+        encoded_payload = {
+            key: f'{quote(str(value), "")}' for key, value in payload.items()
+        }
+        query_string = "&".join(
+            [f"{key}={value}" for key, value in encoded_payload.items()]
+        )
+        response = session.post(
+            "https://www.linkedin.com/checkpoint/challenge/verify", data=query_string
+        )
 
         if not response.ok:
-            raise Exception(f'verify captcha failed {response.text[:200]}')
+            raise Exception(f"verify captcha failed {response.text[:200]}")
 
     @retry(stop=stop_after_attempt(5), retry=retry_if_exception_type(BlobException))
     def login_requests(self):
@@ -150,23 +179,25 @@ class Login:
 
         response = session.get(url)
         if response.status_code != 200:
-            raise Exception(f"failed to begin auth process: {response.status_code} {response.text}")
+            raise Exception(
+                f"failed to begin auth process: {response.status_code} {response.text}"
+            )
         for cookie in session.cookies:
-            if cookie.name == 'JSESSIONID':
-                jsession_value = cookie.value.split('ajax:')[1].strip('"')
+            if cookie.name == "JSESSIONID":
+                jsession_value = cookie.value.split("ajax:")[1].strip('"')
                 break
         else:
-            raise Exception('jsessionid not found, raise issue on GitHub')
-        session.headers['content-type'] = "application/x-www-form-urlencoded"
-        csrf_token=f"ajax%3A{jsession_value}"
+            raise Exception("jsessionid not found, raise issue on GitHub")
+        session.headers["content-type"] = "application/x-www-form-urlencoded"
+        csrf_token = f"ajax%3A{jsession_value}"
         payload = f"session_key={encoded_username}&session_password={encoded_password}&JSESSIONID=%22{csrf_token}%22"
         response = session.post(url, data=payload)
-        data=response.json()
+        data = response.json()
 
-        if data['login_result'] == 'BAD_USERNAME_OR_PASSWORD':
-            raise Exception('incorrect username or password')
-        elif data['login_result']=='CHALLENGE':
-            self.solve_captcha(session,data,payload)
+        if data["login_result"] == "BAD_USERNAME_OR_PASSWORD":
+            raise Exception("incorrect username or password")
+        elif data["login_result"] == "CHALLENGE":
+            self.solve_captcha(session, data, payload)
 
         session = set_csrf_token(session)
         return session
@@ -177,7 +208,7 @@ class Login:
 
         if driver is None:
             logger.debug("No browser found for selenium")
-            raise Exception('driver not found for selenium')
+            raise Exception("driver not found for selenium")
 
         driver.get("https://linkedin.com/login")
         input("Press enter after logged in")
@@ -199,7 +230,7 @@ class Login:
 
     def load_session(self):
         """Load session from session file, otherwise login"""
-        session=None
+        session = None
         if not self.session_file or not os.path.exists(self.session_file):
             if self.username and self.password:
                 try:
