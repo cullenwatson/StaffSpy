@@ -214,9 +214,6 @@ Staff
 **Q: Scraped 999 staff members, with 869 hidden LinkedIn Members?**  
 **A:** It means your LinkedIn account is bad. Not sure how they classify it but unverified email, new account, low connections and a bunch of factors go into it.
 
-**Q: Scraped 999 staff members, with 869 hidden LinkedIn Members?**  
-**A:** It means your LinkedIn account is bad. Not sure how they classify it but unverified email, new account, low connections and a bunch of factors go into it.
-
 **Q: Exception: driver not found for selenium?**  
 **A:** You need chromedriver installed: https://googlechromelabs.github.io/chrome-for-testing/#stable
 
