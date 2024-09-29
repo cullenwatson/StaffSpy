@@ -3,16 +3,18 @@ import os
 import pickle
 import re
 from datetime import datetime
+from typing import Optional
 from urllib.parse import quote
-from dateutil.parser import parse
 
 import requests
 import tldextract
 from bs4 import BeautifulSoup
+from dateutil.parser import parse
 from tenacity import stop_after_attempt, retry_if_exception_type, retry, RetryError
 
-from staffspy.utils.exceptions import BlobException
 from staffspy.solvers.solver import Solver
+from staffspy.utils.driver_type import DriverType, BrowserType
+from staffspy.utils.exceptions import BlobException
 
 logger = logging.getLogger("StaffSpy")
 logger.propagate = False
@@ -50,32 +52,55 @@ def create_emails(first, last, domain):
     return emails
 
 
-def get_webdriver():
+def get_webdriver(driver_type: Optional[DriverType] = None):
     try:
         from selenium import webdriver
-        from selenium.common.exceptions import WebDriverException
+        from selenium.webdriver.chrome.service import Service as ChromeService
+        from selenium.webdriver.firefox.service import Service as FirefoxService
     except ImportError as e:
         raise Exception(
             "install package `pip install staffspy[browser]` to login with browser"
         )
 
-    for browser in [webdriver.Chrome, webdriver.Firefox]:
-        try:
-            return browser()
-        except WebDriverException:
-            continue
+    if driver_type:
+        if str(driver_type.browser_type) == str(BrowserType.CHROME):
+            if driver_type.executable_path:
+                service = ChromeService(executable_path=driver_type.executable_path)
+                return webdriver.Chrome(service=service)
+            else:
+                return webdriver.Chrome()
+        elif str(driver_type.browser_type) == str(BrowserType.FIREFOX):
+            if driver_type.executable_path:
+                service = FirefoxService(executable_path=driver_type.executable_path)
+                return webdriver.Firefox(service=service)
+            else:
+                return webdriver.Firefox()
+    else:
+        for browser in [webdriver.Chrome, webdriver.Firefox]:
+            try:
+                return browser()
+            except Exception:
+                continue
     return None
 
 
 class Login:
 
-    def __init__(self, username: str, password: str, solver: Solver, session_file: str):
-        self.username, self.password, self.solver, self.session_file = (
-            username,
-            password,
-            solver,
-            session_file,
-        )
+    def __init__(
+        self,
+        username: str,
+        password: str,
+        solver: Solver,
+        session_file: str,
+        driver_type: DriverType = None,
+    ):
+        (
+            self.username,
+            self.password,
+            self.solver,
+            self.session_file,
+            self.driver_type,
+        ) = (username, password, solver, session_file, driver_type)
 
     def solve_captcha(self, session, data, payload):
         url = data["challenge_url"]
@@ -204,7 +229,7 @@ class Login:
 
     def login_browser(self):
         """Backup login method"""
-        driver = get_webdriver()
+        driver = get_webdriver(self.driver_type)
 
         if driver is None:
             logger.debug("No browser found for selenium")

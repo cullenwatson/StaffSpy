@@ -6,45 +6,54 @@ from staffspy.solvers.capsolver import CapSolver
 from staffspy.solvers.solver_type import SolverType
 from staffspy.solvers.two_captcha import TwoCaptchaSolver
 from staffspy.utils.utils import set_logger_level, logger, Login
+from utils.driver_type import DriverType, BrowserType
 
 
 class LinkedInAccount:
     solver_map = {
         SolverType.CAPSOLVER: CapSolver,
-        SolverType.TWO_CAPTCHA: TwoCaptchaSolver
+        SolverType.TWO_CAPTCHA: TwoCaptchaSolver,
     }
 
     def __init__(
-            self,
-            session_file: str = None,
-            username: str = None,
-            password: str = None,
-            log_level: int = 0,
-            solver_api_key: str = None,
-            solver_service: SolverType = SolverType.CAPSOLVER
+        self,
+        session_file: str = None,
+        username: str = None,
+        password: str = None,
+        log_level: int = 0,
+        solver_api_key: str = None,
+        solver_service: SolverType = SolverType.CAPSOLVER,
+        driver_type: DriverType = None,
     ):
         self.session_file = session_file
         self.username = username
         self.password = password
         self.log_level = log_level
         self.solver = self.solver_map[solver_service](solver_api_key)
+        self.driver_type = driver_type
         self.session = None
         self.linkedin_scraper = None
         self.login()
 
     def login(self):
         set_logger_level(self.log_level)
-        login = Login(self.username, self.password, self.solver, self.session_file)
+        login = Login(
+            self.username,
+            self.password,
+            self.solver,
+            self.session_file,
+            self.driver_type,
+        )
         self.session = login.load_session()
 
     def scrape_staff(
-            self,
-            company_name: str = None,
-            user_id: str = None,
-            search_term: str = None,
-            location: str = None,
-            extra_profile_data: bool = False,
-            max_results: int = 1000
+        self,
+        company_name: str = None,
+        user_id: str = None,
+        search_term: str = None,
+        location: str = None,
+        extra_profile_data: bool = False,
+        max_results: int = 1000,
     ) -> pd.DataFrame:
         """Scrape staff from Linkedin
         company_name - name of company to find staff frame
@@ -59,7 +68,9 @@ class LinkedInAccount:
         if not company_name:
             if not user_id:
                 raise ValueError("Either company_name or user_id must be provided")
-            company_name = li_scraper.fetch_user_profile_data_from_public_id('company_id')
+            company_name = li_scraper.fetch_user_profile_data_from_public_id(
+                "company_id"
+            )
 
         staff = li_scraper.scrape_staff(
             company_name=company_name,
@@ -76,13 +87,12 @@ class LinkedInAccount:
         linkedin_member_df = staff_df[staff_df["name"] == "LinkedIn Member"]
         non_linkedin_member_df = staff_df[staff_df["name"] != "LinkedIn Member"]
         staff_df = pd.concat([non_linkedin_member_df, linkedin_member_df])
-        logger.info(f"Scraped {len(staff_df)} staff members from {company_name}, with {len(linkedin_member_df)} hidden LinkedIn users")
+        logger.info(
+            f"Scraped {len(staff_df)} staff members from {company_name}, with {len(linkedin_member_df)} hidden LinkedIn users"
+        )
         return staff_df
 
-    def scrape_users(
-            self,
-            user_ids: list[str]
-        ) -> pd.DataFrame:
+    def scrape_users(self, user_ids: list[str]) -> pd.DataFrame:
         """Scrape users from Linkedin by user IDs
         user_ids - list of LinkedIn user IDs
         """
@@ -90,18 +100,19 @@ class LinkedInAccount:
         li_scraper.num_staff = len(user_ids)
         users = [
             Staff(
-                id='',
-                search_term='manual',
+                id="",
+                search_term="manual",
                 profile_id=user_id,
-            ) for user_id in user_ids
+            )
+            for user_id in user_ids
         ]
 
-        for i, user in enumerate(users,start=1):
-            user.id = li_scraper.fetch_user_profile_data_from_public_id(user.profile_id, 'user_id')
+        for i, user in enumerate(users, start=1):
+            user.id = li_scraper.fetch_user_profile_data_from_public_id(
+                user.profile_id, "user_id"
+            )
             if user.id:
-                li_scraper.fetch_all_info_for_employee(
-                    user, i
-                )
+                li_scraper.fetch_all_info_for_employee(user, i)
 
         users_dicts = [user.to_dict() for user in users if user.id]
         users_df = pd.DataFrame(users_dicts)
