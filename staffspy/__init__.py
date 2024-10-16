@@ -6,7 +6,7 @@ from staffspy.solvers.capsolver import CapSolver
 from staffspy.solvers.solver_type import SolverType
 from staffspy.solvers.two_captcha import TwoCaptchaSolver
 from staffspy.utils.utils import set_logger_level, logger, Login
-from utils.driver_type import DriverType, BrowserType
+from staffspy.utils.driver_type import DriverType, BrowserType
 
 
 class LinkedInAccount:
