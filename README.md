@@ -54,8 +54,14 @@ staff = account.scrape_staff(
 users = account.scrape_users(
     user_ids=['williamhgates', 'rbranson', 'jeffweiner08']
 )
+
+# fetch all comments on two of Bill Gates' posts 
+comments = account.scrape_comments(
+    ['7252421958540091394','7253083989547048961']
+)
 staff.to_csv("staff.csv", index=False)
 users.to_csv("users.csv", index=False)
+comments.to_csv("comments.csv", index=False)
 ```
 
 #### Browser login
@@ -138,6 +144,16 @@ Optional
 |    user ids to scrape from
 |     e.g. dougmcmillon from https://www.linkedin.com/in/dougmcmillon
 ```
+
+
+### Parameters for `scrape_comments()`
+
+```plaintext
+├── post_ids (list):
+|    post ids to scrape from
+|     e.g. 7252381444906364929 from https://www.linkedin.com/posts/williamhgates_technology-transformtheeveryday-activity-7252381444906364929-Bkls
+```
+
 
 ### LinkedIn notes
 

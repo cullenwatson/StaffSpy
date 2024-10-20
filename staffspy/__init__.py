@@ -1,5 +1,6 @@
 import pandas as pd
 
+from staffspy.linkedin.comments import CommentFetcher
 from staffspy.linkedin.linkedin import LinkedInScraper
 from staffspy.utils.models import Staff
 from staffspy.solvers.capsolver import CapSolver
@@ -124,3 +125,17 @@ class LinkedInAccount:
         users_df = pd.concat([non_linkedin_member_df, linkedin_member_df])
         logger.info(f"Scraped {len(users_df)} users")
         return users_df
+
+    def scrape_comments(self, post_ids: list[str]) -> pd.DataFrame:
+        """Scrape comments from Linkedin by post IDs"""
+        comment_fetcher = CommentFetcher(self.session)
+        all_comments = []
+        for i, post_id in enumerate(post_ids, start=1):
+
+            comments = comment_fetcher.fetch_comments(post_id)
+            all_comments.extend(comments)
+
+        comment_dict = [comment.to_dict() for comment in all_comments]
+        comment_df = pd.DataFrame(comment_dict)
+
+        return comment_df
