@@ -1,8 +1,28 @@
 from datetime import datetime, date
 
 from pydantic import BaseModel
+from datetime import datetime as dt
 
 from staffspy.utils.utils import extract_emails_from_text
+
+
+class Comment(BaseModel):
+    post_id: str
+    internal_profile_id: str | None = None
+    public_profile_id: str | None = None
+    name: str | None = None
+    text: str | None = None
+    created_at: dt | None = None
+
+    def to_dict(self):
+        return {
+            "post_id": self.post_id,
+            "internal_profile_id": self.internal_profile_id,
+            "public_profile_id": self.public_profile_id,
+            "name": self.name,
+            "text": self.text,
+            "created_at": self.created_at,
+        }
 
 
 class School(BaseModel):
