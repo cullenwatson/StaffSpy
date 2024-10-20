@@ -138,4 +138,4 @@ class LinkedInAccount:
         comment_dict = [comment.to_dict() for comment in all_comments]
         comment_df = pd.DataFrame(comment_dict)
 
-        return comment_df
+        return comment_df.sort_values(by="created_at", ascending=False)
