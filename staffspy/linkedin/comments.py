@@ -12,7 +12,7 @@ class CommentFetcher:
 
     def __init__(self, session):
         self.session = session
-        self.endpoint = "https://www.linkedin.com/voyager/api/graphql?queryId=voyagerSocialDashComments.200c8ad7e1ad32ba4e5cc827ab5c3193&queryName=SocialDashCommentsBySocialDetail&variables=(origins:List(),sortOrder:REVERSE_CHRONOLOGICAL,count:100,socialDetailUrn:urn%3Ali%3Afsd_socialDetail%3A%28urn%3Ali%3Aactivity%3A{post_id}%2Curn%3Ali%3Aactivity%3A{post_id}%2Curn%3Ali%3AhighlightedReply%3A-%29,start:{start})"
+        self.endpoint = "https://www.linkedin.com/voyager/api/graphql?queryId=voyagerSocialDashComments.200c8ad7e1ad32ba4e5cc827ab5c3193&queryName=SocialDashCommentsBySocialDetail&variables=(origins:List(),sortOrder:RELEVANCE,count:100,socialDetailUrn:urn%3Ali%3Afsd_socialDetail%3A%28urn%3Ali%3Aactivity%3A{post_id}%2Curn%3Ali%3Aactivity%3A{post_id}%2Curn%3Ali%3AhighlightedReply%3A-%29,start:{start})"
         self.post_id = None
         self.num_commments = 100
 
@@ -20,7 +20,7 @@ class CommentFetcher:
         all_comments = []
         self.post_id = post_id
 
-        for i in range(0, 100_000, self.num_commments):
+        for i in range(0, 200_000, self.num_commments):
             logger.info(f"Fetching comments for post {post_id}, start {i}")
 
             ep = self.endpoint.format(post_id=post_id, start=i)
@@ -61,12 +61,16 @@ class CommentFetcher:
             linkedin_id = linkedin_id_match.group(1) if linkedin_id_match else None
 
             commentary = element.get("commentary", {}).get("text", "")
+            comment_id = element["urn"].split(",")[-1].rstrip(")")
+            num_likes = element["socialDetail"]["totalSocialActivityCounts"]["numLikes"]
             comment = Comment(
                 post_id=self.post_id,
+                comment_id=comment_id,
                 internal_profile_id=internal_profile_id,
                 public_profile_id=linkedin_id,
                 name=name,
                 text=commentary,
+                num_likes=num_likes,
                 created_at=dt.utcfromtimestamp(element["createdAt"] / 1000),
             )
             comments.append(comment)

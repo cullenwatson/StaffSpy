@@ -8,19 +8,23 @@ from staffspy.utils.utils import extract_emails_from_text
 
 class Comment(BaseModel):
     post_id: str
+    comment_id: str | None = None
     internal_profile_id: str | None = None
     public_profile_id: str | None = None
     name: str | None = None
     text: str | None = None
+    num_likes: int | None = None
     created_at: dt | None = None
 
     def to_dict(self):
         return {
             "post_id": self.post_id,
+            "comment_id": self.comment_id,
             "internal_profile_id": self.internal_profile_id,
             "public_profile_id": self.public_profile_id,
             "name": self.name,
             "text": self.text,
+            "num_likes": self.num_likes,
             "created_at": self.created_at,
         }
 
