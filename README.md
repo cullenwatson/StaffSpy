@@ -6,6 +6,7 @@
 
 - Scrapes staff from a company on **LinkedIn**
 - Obtains skills, experiences, certifications & more
+- Or fetch individuals users / comments on posts
 - Aggregates the employees in a Pandas DataFrame
 
 [Video Guide for StaffSpy](https://youtu.be/qAqaqwhil7E) - _updated for release v0.1.4_
