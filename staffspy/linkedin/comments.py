@@ -12,7 +12,7 @@ class CommentFetcher:
 
     def __init__(self, session):
         self.session = session
-        self.endpoint = "https://www.linkedin.com/voyager/api/graphql?queryId=voyagerSocialDashComments.200c8ad7e1ad32ba4e5cc827ab5c3193&queryName=SocialDashCommentsBySocialDetail&variables=(origins:List(),sortOrder:RELEVANCE,count:100,socialDetailUrn:urn%3Ali%3Afsd_socialDetail%3A%28urn%3Ali%3Aactivity%3A{post_id}%2Curn%3Ali%3Aactivity%3A{post_id}%2Curn%3Ali%3AhighlightedReply%3A-%29,start:{start})"
+        self.endpoint = "https://www.linkedin.com/voyager/api/graphql?queryId=voyagerSocialDashComments.8cb29aedde780600a7ad17fc7ebb8277&queryName=SocialDashCommentsBySocialDetail&variables=(origins:List(),count:100,socialDetailUrn:urn%3Ali%3Afsd_socialDetail%3A%28urn%3Ali%3Aactivity%3A{post_id}%2Curn%3Ali%3Aactivity%3A7254884361622208512%2Curn%3Ali%3AhighlightedReply%3A-%29,sortOrder:REVERSE_CHRONOLOGICAL,start:{start})"
         self.post_id = None
         self.num_commments = 100
 
@@ -28,7 +28,7 @@ class CommentFetcher:
             logger.debug(f"comments info, status code - {res.status_code}")
 
             if res.status_code == 429:
-                return TooManyRequests("429 Too Many Requests")
+                raise TooManyRequests("429 Too Many Requests")
             if not res.ok:
                 logger.debug(res.text[:200])
                 return False
