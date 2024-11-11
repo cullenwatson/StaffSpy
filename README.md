@@ -159,6 +159,31 @@ Optional
     - if rate limited, the program will stop scraping
     - if using non-browser sign in, turn off 2fa
 
+---
+
+## Frequently Asked Questions
+
+---
+
+**Q: Can I get my account banned?**  
+**A:** It is a possibility, although there are no recorded incidents. Let me know if you are the first.
+
+---
+
+**Q: Scraped 999 staff members, with 869 hidden LinkedIn Members?**  
+**A:** It means your LinkedIn account is bad. Not sure how they classify it but unverified email, new account, low connections and a bunch of factors go into it.
+
+---
+
+**Q: Exception: driver not found for selenium?**  
+**A:** You need chromedriver installed: https://googlechromelabs.github.io/chrome-for-testing/#stable
+
+---
+
+**Q: Encountering issues with your queries?**  
+**A:** If problems
+persist, [submit an issue](https://github.com/cullenwatson/StaffSpy/issues).
+
 
 ### Staff Schema
 
@@ -222,27 +247,3 @@ Staff
     ├── school
     └── degree
 ```
----
-
-## Frequently Asked Questions
-
----
-
-**Q: Can I get my account banned?**  
-**A:** It is a possibility, although there are no recorded incidents. Let me know if you are the first.
-
----
-
-**Q: Scraped 999 staff members, with 869 hidden LinkedIn Members?**  
-**A:** It means your LinkedIn account is bad. Not sure how they classify it but unverified email, new account, low connections and a bunch of factors go into it.
-
----
-
-**Q: Exception: driver not found for selenium?**  
-**A:** You need chromedriver installed: https://googlechromelabs.github.io/chrome-for-testing/#stable
-
----
-
-**Q: Encountering issues with your queries?**  
-**A:** If problems
-persist, [submit an issue](https://github.com/cullenwatson/StaffSpy/issues).
