@@ -119,10 +119,6 @@ Optional
 |    company identifier on linkedin, will search for that company if that company id does not exist
 |    e.g. openai from https://www.linkedin.com/company/openai
 |
-├── user_id (str):
-|    alternative to company_name, provide user identifier on linkedin, will scrape this user's company
-|    e.g. dougmcmillon from https://www.linkedin.com/in/dougmcmillon
-|
 ├── search_term (str):
 |    staff title to search for
 |    e.g. software engineer

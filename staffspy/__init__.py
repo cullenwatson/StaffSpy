@@ -50,7 +50,6 @@ class LinkedInAccount:
     def scrape_staff(
         self,
         company_name: str = None,
-        user_id: str = None,
         search_term: str = None,
         location: str = None,
         extra_profile_data: bool = False,
@@ -58,20 +57,12 @@ class LinkedInAccount:
     ) -> pd.DataFrame:
         """Scrape staff from Linkedin
         company_name - name of company to find staff frame
-        user_id - alternative to company_name, fetches the company_name from the user profile
         search_term - occupation / term to search for at the company
         location - filter for staff at a location
         extra_profile_data - fetches staff's experiences, schools, and mor
         max_results - amount of results you desire
         """
         li_scraper = LinkedInScraper(self.session)
-
-        if not company_name:
-            if not user_id:
-                raise ValueError("Either company_name or user_id must be provided")
-            company_name = li_scraper.fetch_user_profile_data_from_public_id(
-                "company_id"
-            )
 
         staff = li_scraper.scrape_staff(
             company_name=company_name,
