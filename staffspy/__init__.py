@@ -152,7 +152,7 @@ class LinkedInAccount:
             company_data = company_res.json()
         except json.decoder.JSONDecodeError:
             logger.error("Failed to fetch company data")
-            raise Exception("Failed to load company data", company_res.text[:200])
+            raise Exception("Failed to load company data", company_res.text)
 
         company_details = company_data["elements"][0]
         company_df = pd.DataFrame([company_details])
