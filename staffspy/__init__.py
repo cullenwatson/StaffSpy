@@ -130,3 +130,31 @@ class LinkedInAccount:
         comment_df = pd.DataFrame(comment_dict)
 
         return comment_df.sort_values(by="created_at", ascending=False)
+
+    def scrape_company(self,
+                       company_name: str = None,
+                       search_term: str = None,
+                       location: str = None,
+                       max_results: int = 20,
+                       ) -> pd.DataFrame:
+        """Scrape company details from Linkedin
+        company_name - name of company to find company
+        search_term - occupation / term to search for at the company
+        location - filter for location
+        max_results - amount of results you desire
+        """
+
+        li_scraper = LinkedInScraper(self.session)
+
+        company_res = li_scraper.fetch_or_search_company(company_name)
+
+        try:
+            company_data = company_res.json()
+        except json.decoder.JSONDecodeError:
+            logger.error("Failed to fetch company data")
+            raise Exception("Failed to load company data", company_res.text[:200])
+
+        company_details = company_data["elements"][0]
+        company_df = pd.DataFrame([company_details])
+
+        return company_df
