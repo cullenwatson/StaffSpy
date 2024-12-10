@@ -94,7 +94,7 @@ class LinkedInScraper:
         """Fetch the company details by name, or search if not found."""
         res = self.session.get(f"{self.company_id_ep}{company_name}")
 
-        if res.status_code not in (200, 404):
+        if res.status_code not in (200, 404, 400):
             raise Exception(
                 f"Failed to find company {company_name}",
                 res.status_code,
