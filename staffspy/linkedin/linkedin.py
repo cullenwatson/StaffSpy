@@ -67,7 +67,7 @@ class LinkedInScraper:
             )
         logger.debug(f"Searched companies {res.status_code}")
         companies = res.json()["data"]["searchDashClustersByAll"]["elements"]
-        if len(companies) < 2:
+        if len(companies) < 1: # TODO check how this will affect search
             raise Exception(
                 f"No companies found for name {company_name}, Response: {res.text[:200]}"
             )
@@ -100,7 +100,8 @@ class LinkedInScraper:
                 res.status_code,
                 res.text[:200],
             )
-        elif res.status_code == 404:
+        # TODO check how this affects search
+        elif res.status_code == 404 or res.status_code == 400:
             logger.info(
                 f"Failed to directly use company '{company_name}' as company id, now searching for the company"
             )
