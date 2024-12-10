@@ -176,7 +176,7 @@ Optional
 ---
 
 **Q: Exception: driver not found for selenium?**  
-**A:** You need chromedriver installed: https://googlechromelabs.github.io/chrome-for-testing/#stable
+**A:** You need chromedriver installed (not the chrome): https://googlechromelabs.github.io/chrome-for-testing/#stable
 
 ---
 
