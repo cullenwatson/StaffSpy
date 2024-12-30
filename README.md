@@ -2,6 +2,8 @@
 
 **StaffSpy** is a staff scraper library for LinkedIn.
 
+_why pay $100/mo for LSN when you could do it for free and get a nice csv to go along with it?_
+
 ## Features
 
 - Scrapes staff from a company on **LinkedIn**
