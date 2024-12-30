@@ -53,28 +53,36 @@ class LinkedInScraper:
         self.experiences = ExperiencesFetcher(self.session)
         self.bio = EmployeeBioFetcher(self.session)
 
-    def search_companies(self, company_name):
+    def search_companies(self, company_name: str):
         """Get the company id and staff count from the company name."""
         company_search_ep = self.company_search_ep.format(company=quote(company_name))
         self.session.headers["x-li-graphql-pegasus-client"] = "true"
         res = self.session.get(company_search_ep)
         self.session.headers.pop("x-li-graphql-pegasus-client", "")
-        if res.status_code != 200:
+        if not res.ok:
             raise Exception(
                 f"Failed to search for company {company_name}",
                 res.status_code,
                 res.text[:200],
             )
-        logger.debug(f"Searched companies {res.status_code}")
+        logger.debug(
+            f"Searched companies for name '{company_name}' - res code {res.status_code}-"
+        )
         companies = res.json()["data"]["searchDashClustersByAll"]["elements"]
+
+        err_msg = f"No companies found for name {company_name}"
         if len(companies) < 2:
-            raise Exception(
-                f"No companies found for name {company_name}, Response: {res.text[:200]}"
-            )
-        metadata, first_company = companies[:2]
+            raise Exception(err_msg)
         try:
-            num_results = metadata["items"][0]["item"]["simpleTextV2"]["text"]["text"]
-            first_company = companies[1]["items"][0]["item"]["entityResult"]
+            num_results = companies[0]["items"][0]["item"]["simpleTextV2"]["text"][
+                "text"
+            ]
+            first_company = companies[1]["items"][0]["item"].get("entityResult")
+            if not first_company and len(companies) > 2:
+                first_company = companies[2]["items"][0]["item"].get("entityResult")
+            if not first_company:
+                raise Exception(err_msg)
+
             company_link = first_company["navigationUrl"]
             company_name_id = unquote(
                 re.search(r"/company/([^/]+)", company_link).group(1)
@@ -113,10 +121,10 @@ class LinkedInScraper:
                     res.text[:200],
                 )
 
-        logger.debug(f"Fetched company {res.status_code}")
+        logger.debug(f"res code {res.status_code} - fetched company ")
         return res
 
-    def get_company_id_and_staff_count(self, company_name: str):
+    def _get_company_id_and_staff_count(self, company_name: str):
         """Extract company id and staff count from the company details."""
         res = self.fetch_or_search_company(company_name)
 
@@ -263,7 +271,7 @@ class LinkedInScraper:
         extra_profile_data: bool,
         max_results: int,
     ):
-        """Main driver function"""
+        """Main function entry point to scrape LinkedIn staff"""
         self.search_term = search_term
         self.company_name = company_name
         self.max_results = max_results
@@ -271,7 +279,7 @@ class LinkedInScraper:
         self.company_id = None
 
         if self.company_name:
-            self.company_id, staff_count = self.get_company_id_and_staff_count(
+            self.company_id, staff_count = self._get_company_id_and_staff_count(
                 company_name
             )
         else:
@@ -293,8 +301,10 @@ class LinkedInScraper:
                 if not staff:
                     break
                 staff_list += staff
+
+            location = f", Location: '{location}'" if location else ""
             logger.info(
-                f"Found {len(staff_list)} staff at {company_name} {f'in {location}' if location else ''}"
+                f"Found {len(staff_list)} staff at Company: '{company_name}'{location}"
             )
         except (BadCookies, TooManyRequests) as e:
             logger.error(str(e))

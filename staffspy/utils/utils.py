@@ -3,6 +3,8 @@ import os
 import pickle
 import re
 from datetime import datetime
+
+import pandas as pd
 from typing import Optional
 from urllib.parse import quote
 
@@ -281,7 +283,25 @@ class Login:
                 "X-Li-Track": '{"clientVersion":"1.13.1665"}',
             }
         )
+        if not self.check_logged_in(session):
+            raise Exception(
+                "Failed to log in. Likely dated session file and cookies have expired. Delete the file and rerun the LinkedAccount() code"
+            )
         return session
+
+    def check_logged_in(self, session):
+        logger.info("Testing if logged in by checking arbitrary LinkedIn company page")
+        try:
+            res = session.get(
+                "https://www.linkedin.com/voyager/api/organization/companies?q=universalName&universalName=amazon"
+            )
+            if res.status_code != 200:
+                logger.error(f"{res.status_code} status code returned from linkeind")
+                return False
+        except:
+            return False
+        logger.info("Account successfully logged in - res code 200")
+        return True
 
 
 def parse_date(date_str):
@@ -353,6 +373,66 @@ def extract_emails_from_text(text: str) -> list[str] | None:
         return None
     email_regex = re.compile(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}")
     return email_regex.findall(text)
+
+
+def parse_company_data(json_data, search_term=None):
+    company_info = json_data["elements"][0]
+
+    company_name = company_info.get("name", "")
+    staff_count = company_info.get("staffCount", None)
+    company_type = company_info.get("type", "")
+    description = company_info.get("description", "")
+
+    industries_list = [
+        ind.get("localizedName", "")
+        for ind in company_info.get("companyIndustries", [])
+    ]
+
+    headquarter = company_info.get("headquarter", {})
+    headquarter_full = f'{headquarter.get("line1", "")}, {headquarter.get("city", "")}, {headquarter.get("country", "")} {headquarter.get("postalCode", "")}'
+
+    logo_data = company_info.get("logo", {})
+    vector_image = logo_data.get("image", {}).get("com.linkedin.common.VectorImage", {})
+    root_url = vector_image.get("rootUrl", "")
+    artifacts = vector_image.get("artifacts", [])
+
+    logo_url = None
+    if artifacts:
+        first_artifact = artifacts[0]
+        file_path = first_artifact.get("fileIdentifyingUrlPathSegment", "")
+        logo_url = root_url + file_path
+
+    tracking_info = company_info.get("trackingInfo", {})
+    object_urn = tracking_info.get("objectUrn", "")
+    internal_id = None
+    if object_urn.startswith("urn:li:company:"):
+        internal_id = object_urn.split(":")[-1]
+
+    bg_photo = company_info.get("backgroundCoverPhoto", {})
+    vector_image = bg_photo.get("com.linkedin.common.VectorImage", {})
+    root_url = vector_image.get("rootUrl", "")
+    artifacts = vector_image.get("artifacts", [])
+    banner_url = None
+    if artifacts:
+        chosen_artifact = artifacts[0]
+        file_segment = chosen_artifact.get("fileIdentifyingUrlPathSegment", "")
+        banner_url = root_url + file_segment
+
+    company_df = pd.DataFrame(
+        {
+            "search_term": [search_term],
+            "linkedin_company_id": [internal_id],
+            "company_name": [company_name],
+            "staff_count": [staff_count],
+            "company_type": [company_type],
+            "industries": [industries_list],
+            "headquarters_address": [headquarter_full],
+            "description": [description],
+            "logo_url": [logo_url],
+            "banner_url": [banner_url],
+        }
+    )
+    return company_df
 
 
 if __name__ == "__main__":

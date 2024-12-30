@@ -1,3 +1,4 @@
+import json
 import pandas as pd
 
 from staffspy.linkedin.comments import CommentFetcher
@@ -6,8 +7,8 @@ from staffspy.utils.models import Staff
 from staffspy.solvers.capsolver import CapSolver
 from staffspy.solvers.solver_type import SolverType
 from staffspy.solvers.two_captcha import TwoCaptchaSolver
-from staffspy.utils.utils import set_logger_level, logger, Login
-from staffspy.utils.driver_type import DriverType, BrowserType
+from staffspy.utils.utils import set_logger_level, logger, Login, parse_company_data
+from staffspy.utils.driver_type import DriverType
 
 
 class LinkedInAccount:
@@ -130,3 +131,37 @@ class LinkedInAccount:
         comment_df = pd.DataFrame(comment_dict)
 
         return comment_df.sort_values(by="created_at", ascending=False)
+
+    def scrape_companies(
+        self,
+        company_names: list[str] = None,
+    ) -> pd.DataFrame:
+        """Scrape company details from Linkedin
+        company_names - list of company names to find companies
+        """
+        if not company_names:
+            raise ValueError("company_names list cannot be empty")
+
+        li_scraper = LinkedInScraper(self.session)
+        company_dfs = []
+
+        for company_name in company_names:
+            try:
+                company_res = li_scraper.fetch_or_search_company(company_name)
+                try:
+                    company_data = company_res.json()
+                except json.decoder.JSONDecodeError:
+                    logger.error(f"Failed to fetch company data for {company_name}")
+                    continue
+
+                company_df = parse_company_data(company_data, search_term=company_name)
+                company_dfs.append(company_df)
+
+            except Exception as e:
+                logger.error(f"Failed to process company {company_name}: {str(e)}")
+                continue
+
+        if not company_dfs:
+            return pd.DataFrame()
+
+        return pd.concat(company_dfs, ignore_index=True)
