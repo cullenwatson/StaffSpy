@@ -7,7 +7,13 @@ from staffspy.utils.models import Staff
 from staffspy.solvers.capsolver import CapSolver
 from staffspy.solvers.solver_type import SolverType
 from staffspy.solvers.two_captcha import TwoCaptchaSolver
-from staffspy.utils.utils import set_logger_level, logger, Login, parse_company_data
+from staffspy.utils.utils import (
+    set_logger_level,
+    logger,
+    Login,
+    parse_company_data,
+    extract_emails_from_text,
+)
 from staffspy.utils.driver_type import DriverType
 
 
@@ -123,14 +129,17 @@ class LinkedInAccount:
         comment_fetcher = CommentFetcher(self.session)
         all_comments = []
         for i, post_id in enumerate(post_ids, start=1):
-
             comments = comment_fetcher.fetch_comments(post_id)
             all_comments.extend(comments)
 
         comment_dict = [comment.to_dict() for comment in all_comments]
         comment_df = pd.DataFrame(comment_dict)
 
-        return comment_df.sort_values(by="created_at", ascending=False)
+        if not comment_df.empty:
+            comment_df["emails"] = comment_df["text"].apply(extract_emails_from_text)
+            comment_df = comment_df.sort_values(by="created_at", ascending=False)
+
+        return comment_df
 
     def scrape_companies(
         self,
