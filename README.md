@@ -29,13 +29,7 @@ from staffspy import LinkedInAccount, SolverType, DriverType, BrowserType
 
 session_file = Path(__file__).resolve().parent / "session.pkl"
 account = LinkedInAccount(
-    # commenting these out because 2Captcha is not reliable, so sign in with browser
-    # username="myemail@gmail.com",
-    # password="mypassword",
-    # solver_api_key="your-api-key",
-    # solver_service=SolverType.TWO_CAPTCHA,
-    
-    # if issues with webdriver, specify
+    # if issues with webdriver, specify its exact location
     # driver_type=DriverType(
     #     browser_type=BrowserType.CHROME,
     #     executable_path="/Users/pc/chromedriver-mac-arm64/chromedriver"
