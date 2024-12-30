@@ -60,9 +60,16 @@ users = account.scrape_users(
 comments = account.scrape_comments(
     ['7252421958540091394','7253083989547048961']
 )
+
+# fetch company details
+companies = account.scrape_companies(
+    company_names=['openai', 'microsoft']
+)
+
 staff.to_csv("staff.csv", index=False)
 users.to_csv("users.csv", index=False)
 comments.to_csv("comments.csv", index=False)
+companies.to_csv("companies.csv", index=False)
 ```
 
 #### Browser login
@@ -149,6 +156,15 @@ Optional
 ├── post_ids (list):
 |    post ids to scrape from
 |     e.g. 7252381444906364929 from https://www.linkedin.com/posts/williamhgates_technology-transformtheeveryday-activity-7252381444906364929-Bkls
+```
+
+
+### Parameters for `scrape_companies()`
+
+```plaintext
+├── company_names (list):
+|    list of company names to scrape details from
+|     e.g. ['openai', 'microsoft', 'google']
 ```
 
 

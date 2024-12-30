@@ -1,3 +1,4 @@
+import json
 import pandas as pd
 
 from staffspy.linkedin.comments import CommentFetcher
@@ -6,8 +7,8 @@ from staffspy.utils.models import Staff
 from staffspy.solvers.capsolver import CapSolver
 from staffspy.solvers.solver_type import SolverType
 from staffspy.solvers.two_captcha import TwoCaptchaSolver
-from staffspy.utils.utils import set_logger_level, logger, Login
-from staffspy.utils.driver_type import DriverType, BrowserType
+from staffspy.utils.utils import set_logger_level, logger, Login, parse_company_data
+from staffspy.utils.driver_type import DriverType
 
 
 class LinkedInAccount:
@@ -131,30 +132,36 @@ class LinkedInAccount:
 
         return comment_df.sort_values(by="created_at", ascending=False)
 
-    def scrape_company(self,
-                       company_name: str = None,
-                       search_term: str = None,
-                       location: str = None,
-                       max_results: int = 20,
-                       ) -> pd.DataFrame:
+    def scrape_companies(
+        self,
+        company_names: list[str] = None,
+    ) -> pd.DataFrame:
         """Scrape company details from Linkedin
-        company_name - name of company to find company
-        search_term - occupation / term to search for at the company
-        location - filter for location
-        max_results - amount of results you desire
+        company_names - list of company names to find companies
         """
+        if not company_names:
+            raise ValueError("company_names list cannot be empty")
 
         li_scraper = LinkedInScraper(self.session)
+        company_dfs = []
 
-        company_res = li_scraper.fetch_or_search_company(company_name)
+        for company_name in company_names:
+            try:
+                company_res = li_scraper.fetch_or_search_company(company_name)
+                try:
+                    company_data = company_res.json()
+                except json.decoder.JSONDecodeError:
+                    logger.error(f"Failed to fetch company data for {company_name}")
+                    continue
 
-        try:
-            company_data = company_res.json()
-        except json.decoder.JSONDecodeError:
-            logger.error("Failed to fetch company data")
-            raise Exception("Failed to load company data", company_res.text)
+                company_df = parse_company_data(company_data, search_term=company_name)
+                company_dfs.append(company_df)
 
-        company_details = company_data["elements"][0]
-        company_df = pd.DataFrame([company_details])
+            except Exception as e:
+                logger.error(f"Failed to process company {company_name}: {str(e)}")
+                continue
 
-        return company_df
+        if not company_dfs:
+            return pd.DataFrame()
+
+        return pd.concat(company_dfs, ignore_index=True)
