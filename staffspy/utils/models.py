@@ -96,6 +96,7 @@ class Experience(BaseModel):
 
 
 class Staff(BaseModel):
+    urn: str | None = None
     search_term: str
     id: str
     name: str | None = None
@@ -185,6 +186,7 @@ class Staff(BaseModel):
         return {
             "search_term": self.search_term,
             "id": self.id,
+            "urn": self.urn,
             "profile_id": self.profile_id,
             "name": self.name if self.name else " ".join(name) if name else None,
             "first_name": self.first_name,

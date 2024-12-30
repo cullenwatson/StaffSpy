@@ -109,7 +109,7 @@ class LinkedInAccount:
         ]
 
         for i, user in enumerate(users, start=1):
-            user.id = li_scraper.fetch_user_profile_data_from_public_id(
+            user.id, user.urn = li_scraper.fetch_user_profile_data_from_public_id(
                 user.profile_id, "user_id"
             )
             if user.id:

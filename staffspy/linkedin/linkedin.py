@@ -149,7 +149,7 @@ class LinkedInScraper:
         logger.info(f"Found company '{company_name}' with {staff_count} staff")
         return company_id, staff_count
 
-    def parse_staff(self, elements):
+    def parse_staff(self, elements: list[dict]):
         """Parse the staff from the search results"""
         staff = []
 
@@ -161,6 +161,7 @@ class LinkedInScraper:
                 pattern = r"urn:li:fsd_profile:([^,]+),SEARCH_SRP"
                 match = re.search(pattern, person["entityUrn"])
                 linkedin_id = match.group(1)
+                person_urn = person["trackingUrn"].split(":")[-1]
 
                 name = person["title"]["text"].strip()
                 headline = (
@@ -170,6 +171,7 @@ class LinkedInScraper:
                 )
                 staff.append(
                     Staff(
+                        urn=person_urn,
                         id=linkedin_id,
                         name=name,
                         headline=headline,
@@ -381,7 +383,8 @@ class LinkedInScraper:
             data = response_json
             for k in keys[key]:
                 data = data[k]
-            return data
+            urn = response_json["profile"]["miniProfile"]["objectUrn"].split(":")[-1]
+            return data, urn
         except (KeyError, TypeError, IndexError) as e:
             logger.warning(f"Failed to find user_id {user_id}")
             if key == "user_id":
