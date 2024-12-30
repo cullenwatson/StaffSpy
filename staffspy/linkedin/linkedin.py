@@ -32,6 +32,7 @@ class LinkedInScraper:
     public_user_id_ep = (
         "https://www.linkedin.com/voyager/api/identity/profiles/{user_id}/profileView"
     )
+    block_user_ep = "https://www.linkedin.com/voyager/api/voyagerTrustDashContentReportingForm?action=entityBlock"
 
     def __init__(self, session: requests.Session):
         self.session = session
@@ -169,6 +170,7 @@ class LinkedInScraper:
                     if person.get("primarySubtitle")
                     else ""
                 )
+                profile_link = person["navigationUrl"].split("?")[0]
                 staff.append(
                     Staff(
                         urn=person_urn,
@@ -185,6 +187,7 @@ class LinkedInScraper:
                                 ],
                             )
                         ),
+                        profile_link=profile_link,
                     )
                 )
         return staff
@@ -272,6 +275,7 @@ class LinkedInScraper:
         location: str,
         extra_profile_data: bool,
         max_results: int,
+        block: bool,
     ):
         """Main function entry point to scrape LinkedIn staff"""
         self.search_term = search_term
@@ -322,6 +326,12 @@ class LinkedInScraper:
             try:
                 for i, employee in enumerate(non_restricted, start=1):
                     self.fetch_all_info_for_employee(employee, i)
+                    if block and employee.urn != "headless":
+                        success = self.block_user(employee)
+                        if success:
+                            logger.info(f"Successfully blocked user: {employee.name}")
+                        else:
+                            logger.warning(f"Failed to block user: {employee.name}")
             except TooManyRequests as e:
                 logger.error(str(e))
 
@@ -330,7 +340,7 @@ class LinkedInScraper:
     def fetch_all_info_for_employee(self, employee: Staff, index: int):
         """Simultaniously fetch all the data for an employee"""
         logger.info(
-            f"Fetching employee data for {employee.id} {index} / {self.num_staff}"
+            f"Fetching employee data for {employee.id} {index:>4} / {self.num_staff} - {employee.profile_link}"
         )
 
         with ThreadPoolExecutor(max_workers=6) as executor:
@@ -390,3 +400,21 @@ class LinkedInScraper:
             if key == "user_id":
                 return ""
             raise Exception(f"Failed to fetch '{key}' for user_id {user_id}: {e}")
+
+    def block_user(self, employee: Staff) -> bool:
+        """Block a user on LinkedIn given their urn"""
+        self.session.headers["Content-Type"] = (
+            "application/x-protobuf2; symbol-table=voyager-20757"
+        )
+
+        urn_string = f"urn:li:member:{employee.urn}"
+        length_byte = bytes([len(urn_string)])
+        body = b"\x00\x01\x14\nblockeeUrn\x14" + length_byte + urn_string.encode()
+
+        res = self.session.post(
+            self.block_user_ep,
+            data=body,
+        )
+        self.session.headers.pop("Content-Type", "")
+
+        return res.status_code == 200

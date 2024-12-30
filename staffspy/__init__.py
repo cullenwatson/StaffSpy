@@ -61,13 +61,15 @@ class LinkedInAccount:
         location: str = None,
         extra_profile_data: bool = False,
         max_results: int = 1000,
+        block: bool = False,
     ) -> pd.DataFrame:
         """Scrape staff from Linkedin
         company_name - name of company to find staff frame
         search_term - occupation / term to search for at the company
         location - filter for staff at a location
-        extra_profile_data - fetches staff's experiences, schools, and mor
+        extra_profile_data - fetches staff's experiences, schools, and more
         max_results - amount of results you desire
+        block - if True, blocks all scraped users
         """
         li_scraper = LinkedInScraper(self.session)
 
@@ -77,6 +79,7 @@ class LinkedInAccount:
             search_term=search_term,
             location=location,
             max_results=max_results,
+            block=block,
         )
         staff_dicts = [staff.to_dict() for staff in staff]
         staff_df = pd.DataFrame(staff_dicts)
@@ -85,6 +88,7 @@ class LinkedInAccount:
 
         if staff_df.empty:
             return staff_df
+
         linkedin_member_df = staff_df[staff_df["name"] == "LinkedIn Member"]
         non_linkedin_member_df = staff_df[staff_df["name"] != "LinkedIn Member"]
         staff_df = pd.concat([non_linkedin_member_df, linkedin_member_df])
@@ -176,19 +180,3 @@ class LinkedInAccount:
             return pd.DataFrame()
 
         return pd.concat(company_dfs, ignore_index=True)
-
-    def block_user(self, urn: str) -> bool:
-        """Block a user on LinkedIn given their urn"""
-        self.session.headers["Content-Type"] = (
-            "application/x-protobuf2; symbol-table=voyager-20757"
-        )
-
-        body = b"\x00\x01\x14\nblockeeUrn\x14\x17urn:li:member:" + urn.encode()
-
-        res = self.session.post(
-            "https://www.linkedin.com/voyager/api/voyagerTrustDashContentReportingForm?action=entityBlock",
-            data=body,
-        )
-        self.session.headers.pop("Content-Type", "")
-
-        return res.status_code == 200

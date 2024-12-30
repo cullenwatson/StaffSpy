@@ -48,7 +48,9 @@ class EmployeeFetcher:
             try:
                 photo_data = emp_dict[key]["displayImageReference"]["vectorImage"]
                 photo_base_url = photo_data["rootUrl"]
-                photo_ext_url = photo_data["artifacts"][-1]["fileIdentifyingUrlPathSegment"]
+                photo_ext_url = photo_data["artifacts"][-1][
+                    "fileIdentifyingUrlPathSegment"
+                ]
                 return f"{photo_base_url}{photo_ext_url}"
             except (KeyError, TypeError, IndexError, ValueError):
                 return None
@@ -57,26 +59,33 @@ class EmployeeFetcher:
         emp.banner_photo = get_photo_url(emp_dict, "backgroundPicture")
         emp.profile_id = emp_dict["publicIdentifier"]
         try:
-            emp.headline = emp_dict.get('headline')
+            emp.headline = emp_dict.get("headline")
             if not emp.headline:
-                emp.headline = emp_dict['memberRelationship']['memberRelationshipData']['noInvitation']['targetInviteeResolutionResult']['headline']
+                emp.headline = emp_dict["memberRelationship"]["memberRelationshipData"][
+                    "noInvitation"
+                ]["targetInviteeResolutionResult"]["headline"]
         except:
             pass
-        emp.is_connection = next(iter(emp_dict['memberRelationship']['memberRelationshipUnion'])) == 'connection'
-        emp.open_to_work = emp_dict['profilePicture'].get('frameType')=='OPEN_TO_WORK'
-        emp.is_hiring = emp_dict['profilePicture'].get('frameType')=='HIRING'
-
-        emp.profile_link = f'https://www.linkedin.com/in/{emp_dict["publicIdentifier"]}'
+        emp.is_connection = (
+            next(iter(emp_dict["memberRelationship"]["memberRelationshipUnion"]))
+            == "connection"
+        )
+        emp.open_to_work = emp_dict["profilePicture"].get("frameType") == "OPEN_TO_WORK"
+        emp.is_hiring = emp_dict["profilePicture"].get("frameType") == "HIRING"
 
         emp.first_name = emp_dict["firstName"]
-        emp.last_name = emp_dict["lastName"].split(',')[0]
-        emp.potential_emails = utils.create_emails(
-            emp.first_name, emp.last_name, self.domain
-        ) if self.domain else None
+        emp.last_name = emp_dict["lastName"].split(",")[0]
+        emp.potential_emails = (
+            utils.create_emails(emp.first_name, emp.last_name, self.domain)
+            if self.domain
+            else None
+        )
 
         emp.followers = emp_dict.get("followingState", {}).get("followerCount")
         emp.connections = emp_dict["connections"]["paging"]["total"]
-        emp.location = emp_dict.get("geoLocation",{}).get("geo",{}).get("defaultLocalizedName")
+        emp.location = (
+            emp_dict.get("geoLocation", {}).get("geo", {}).get("defaultLocalizedName")
+        )
 
         # Handle empty elements case for company
         top_positions = emp_dict.get("profileTopPosition", {}).get("elements", [])
