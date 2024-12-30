@@ -176,3 +176,19 @@ class LinkedInAccount:
             return pd.DataFrame()
 
         return pd.concat(company_dfs, ignore_index=True)
+
+    def block_user(self, urn: str) -> bool:
+        """Block a user on LinkedIn given their urn"""
+        self.session.headers["Content-Type"] = (
+            "application/x-protobuf2; symbol-table=voyager-20757"
+        )
+
+        body = b"\x00\x01\x14\nblockeeUrn\x14\x17urn:li:member:" + urn.encode()
+
+        res = self.session.post(
+            "https://www.linkedin.com/voyager/api/voyagerTrustDashContentReportingForm?action=entityBlock",
+            data=body,
+        )
+        self.session.headers.pop("Content-Type", "")
+
+        return res.status_code == 200
