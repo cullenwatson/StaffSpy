@@ -80,6 +80,8 @@ class LinkedInAccount:
         )
         staff_dicts = [staff.to_dict() for staff in staff]
         staff_df = pd.DataFrame(staff_dicts)
+        if "estimated_age" in staff_df.columns:
+            staff_df["estimated_age"] = staff_df["estimated_age"].astype("Int64")
 
         if staff_df.empty:
             return staff_df
