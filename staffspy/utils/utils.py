@@ -414,7 +414,7 @@ def parse_company_data(json_data, search_term=None):
     artifacts = vector_image.get("artifacts", [])
     banner_url = None
     if artifacts:
-        chosen_artifact = artifacts[0]  # or artifacts[-1] for the largest
+        chosen_artifact = artifacts[0]
         file_segment = chosen_artifact.get("fileIdentifyingUrlPathSegment", "")
         banner_url = root_url + file_segment
 
