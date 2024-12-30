@@ -85,6 +85,12 @@ class LinkedInAccount:
         staff_df = pd.DataFrame(staff_dicts)
         if "estimated_age" in staff_df.columns:
             staff_df["estimated_age"] = staff_df["estimated_age"].astype("Int64")
+        if "followers" in staff_df.columns:
+            staff_df["followers"] = staff_df["followers"].astype("Int64")
+        if "connections" in staff_df.columns:
+            staff_df["connections"] = staff_df["connections"].astype("Int64")
+        if "mutuals" in staff_df.columns:
+            staff_df["mutuals"] = staff_df["mutuals"].astype("Int64")
 
         if staff_df.empty:
             return staff_df

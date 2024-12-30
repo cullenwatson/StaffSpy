@@ -201,7 +201,7 @@ class LinkedInScraper:
                 if self.company_id
                 else ""
             ),
-            count=min(50, self.max_results),
+            count=50,
             search=f"keywords:{quote(self.search_term)}," if self.search_term else "",
             location=(
                 f"(key:geoUrn,value:List({self.location}))," if self.location else ""
