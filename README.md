@@ -44,6 +44,7 @@ staff = account.scrape_staff(
     location="london",
     extra_profile_data=True, # fetch all past experiences, schools, & skills
     max_results=50, # can go up to 1000
+    # block=True # if you want to block the user after scraping, to exclude from future search results
 )
 # or fetch by user ids
 users = account.scrape_users(
@@ -133,6 +134,9 @@ Optional
 │
 ├── max_results (int):
 |    number of staff to fetch, default/max is 1000 for a search imposed by LinkedIn
+|
+├── block (bool):
+|    whether to block the user after scraping
 ```
 
 ### Parameters for `scrape_users()`
@@ -141,6 +145,9 @@ Optional
 ├── user_ids (list):
 |    user ids to scrape from
 |     e.g. dougmcmillon from https://www.linkedin.com/in/dougmcmillon
+|
+├── block (bool):
+|    whether to block the user after scraping
 ```
 
 
