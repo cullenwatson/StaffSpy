@@ -186,6 +186,7 @@ class Staff(BaseModel):
             "search_term": self.search_term,
             "id": self.id,
             "urn": self.urn,
+            "profile_link": self.profile_link,
             "profile_id": self.profile_id,
             "name": self.name,
             "first_name": self.first_name,
@@ -233,7 +234,6 @@ class Staff(BaseModel):
                 ", ".join(self.emails_in_bio) if self.emails_in_bio else None
             ),
             "potential_emails": self.potential_emails,
-            "profile_link": self.profile_link,
             "profile_photo": self.profile_photo,
             "banner_photo": self.banner_photo,
         }

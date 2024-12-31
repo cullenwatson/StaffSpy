@@ -1,7 +1,7 @@
 """
 CASE STUDY: X CORP EMPLOYEES
-RESULT: We retrieved 731 profiles. Not as good as I was expecting, was aiming for more around 3k, but it's a good start.
-https://drive.google.com/file/d/1A1QlgG0chMPg4Ac51Dbfy25iDv32Jdo8/view
+RESULT: We retrieved 2153 profiles. Not as good as I was expecting, was aiming for more around 4k, but it's a good start.
+https://drive.google.com/file/d/1FNAu3D1gyA-Sa97ajI21LlbdOFZdrJRo/view
 
 This is an attempt to get every employee data at the company X.
 Strategies to get around LinkedIn 1000 result limit:
@@ -102,7 +102,7 @@ def scrape_and_save(term=None, location=None):
         search_term=term,
         location=location,
         extra_profile_data=True,
-        max_results=10,
+        max_results=1000,
         block=True,
     )
     if not users.empty:
@@ -112,7 +112,8 @@ def scrape_and_save(term=None, location=None):
 company_name = "x-corp"
 
 # generic search
-scrape_and_save()
+for _ in range(5):
+    scrape_and_save()
 
 # Search by departments
 for department in departments:
@@ -130,11 +131,12 @@ combined_df = pd.concat(dfs, ignore_index=True)
 # Filter out hidden profiles
 filtered_df = combined_df[combined_df["urn"] != "headless"]
 filtered_df = filtered_df[filtered_df["current_company"] == "X"]
+filtered_df = filtered_df.drop_duplicates(subset="urn")
 
-# Compare unique profiles
+# output all unique staff to csv
 total_urns = len(filtered_df["urn"])
-filtered_urns = len(set(filtered_df["urn"]))
 print(f"Total unique profiles: {total_urns}")
-print(f"Filtered unique profiles: {filtered_urns}")
-print(f"Difference: {total_urns - filtered_urns}")
-filtered_df.to_csv(f"output/{company_name}/final_result.csv", index=False)
+filtered_df.to_csv(
+    f"output/{company_name}/final_result_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+    index=False,
+)

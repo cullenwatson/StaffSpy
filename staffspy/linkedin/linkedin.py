@@ -306,13 +306,12 @@ class LinkedInScraper:
                 return staff_list[:max_results]
 
         try:
-            # Get initial results to get total count
             initial_staff, total_count = self.fetch_staff(0)
             if initial_staff:
                 staff_list.extend(initial_staff)
             location = f", location: '{location}'" if location else ""
             logger.info(
-                f"Saerch results for company: '{company_name}'{location} - {total_count:,} staff"
+                f"1) Search results for company: '{company_name}'{location} - {total_count:,} staff"
             )
 
             self.num_staff = min(total_count, max_results, 1000)
@@ -326,7 +325,7 @@ class LinkedInScraper:
                 staff_list.extend(staff)
             location = f", location: '{location}'" if location else ""
             logger.info(
-                f"Total results collected for company: '{company_name}'{location} - {len(staff_list)} results"
+                f"2) Total results collected for company: '{company_name}'{location} - {len(staff_list)} results"
             )
         except (BadCookies, TooManyRequests) as e:
             self.on_block = True
@@ -434,9 +433,7 @@ class LinkedInScraper:
         self.session.headers.pop("Content-Type", "")
 
         if res.ok:
-            logger.info(
-                f"Successfully blocked user {employee.id}: {employee.profile_link}"
-            )
+            logger.info(f"Successfully blocked user {employee.id}")
         elif res.status_code == 403:
             logger.warning(
                 f"Failed to block user - status code 403, one possible reason is you have alread blocked/unblocked this person in past 48 hours and on cooldown: {employee.profile_link}"
