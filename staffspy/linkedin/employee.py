@@ -75,6 +75,9 @@ class EmployeeFetcher:
 
         emp.first_name = emp_dict["firstName"]
         emp.last_name = emp_dict["lastName"].split(",")[0]
+        if not emp.name:
+            name = filter(None, [emp.first_name, emp.last_name])
+            emp.name = " ".join(name)
         emp.potential_emails = (
             utils.create_emails(emp.first_name, emp.last_name, self.domain)
             if self.domain

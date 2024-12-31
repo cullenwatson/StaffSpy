@@ -329,11 +329,7 @@ class LinkedInScraper:
                 for i, employee in enumerate(non_restricted, start=1):
                     self.fetch_all_info_for_employee(employee, i)
                     if block and employee.urn != "headless":
-                        success = self.block_user(employee)
-                        if success:
-                            logger.info(f"Successfully blocked user: {employee.name}")
-                        else:
-                            logger.warning(f"Failed to block user: {employee.name}")
+                        self.block_user(employee)
             except TooManyRequests as e:
                 logger.error(str(e))
 
@@ -347,7 +343,6 @@ class LinkedInScraper:
 
         with ThreadPoolExecutor(max_workers=7) as executor:
             tasks = {
-                executor.submit(self.languages.fetch_languages, employee): "lanaguages",
                 executor.submit(
                     self.employees.fetch_employee, employee, self.domain
                 ): "employee",
@@ -360,6 +355,7 @@ class LinkedInScraper:
                 ),
                 executor.submit(self.schools.fetch_schools, employee): "schools",
                 executor.submit(self.bio.fetch_employee_bio, employee): "bio",
+                executor.submit(self.languages.fetch_languages, employee): "lanaguages",
             }
 
             for future in as_completed(tasks):
@@ -404,8 +400,10 @@ class LinkedInScraper:
                 return ""
             raise Exception(f"Failed to fetch '{key}' for user_id {user_id}: {e}")
 
-    def block_user(self, employee: Staff) -> bool:
+    def block_user(self, employee: Staff) -> None:
         """Block a user on LinkedIn given their urn"""
+        if employee.urn == "headless":
+            return
         self.session.headers["Content-Type"] = (
             "application/x-protobuf2; symbol-table=voyager-20757"
         )
@@ -420,4 +418,15 @@ class LinkedInScraper:
         )
         self.session.headers.pop("Content-Type", "")
 
-        return res.status_code == 200
+        if res.ok:
+            logger.info(
+                f"Successfully blocked user {employee.id}: {employee.profile_link}"
+            )
+        elif res.status_code == 403:
+            logger.warning(
+                f"Failed to block user - status code 403, likely already blocked/unblocked in past 48 hours and on cooldown: {employee.profile_link}"
+            )
+        else:
+            logger.warning(
+                f"Failed to block user - status code {res.status_code} {employee.id}: {employee.name}"
+            )

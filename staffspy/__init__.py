@@ -103,9 +103,10 @@ class LinkedInAccount:
         )
         return staff_df
 
-    def scrape_users(self, user_ids: list[str]) -> pd.DataFrame:
+    def scrape_users(self, user_ids: list[str], block: bool = False) -> pd.DataFrame:
         """Scrape users from Linkedin by user IDs
         user_ids - list of LinkedIn user IDs
+        block - if True, blocks all scraped users
         """
         li_scraper = LinkedInScraper(self.session)
         li_scraper.num_staff = len(user_ids)
@@ -114,6 +115,7 @@ class LinkedInAccount:
                 id="",
                 search_term="manual",
                 profile_id=user_id,
+                profile_link=f"https://www.linkedin.com/in/{user_id}",
             )
             for user_id in user_ids
         ]
@@ -124,6 +126,8 @@ class LinkedInAccount:
             )
             if user.id:
                 li_scraper.fetch_all_info_for_employee(user, i)
+                if block:
+                    li_scraper.block_user(user)
 
         users_dicts = [user.to_dict() for user in users if user.id]
         users_df = pd.DataFrame(users_dicts)

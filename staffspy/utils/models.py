@@ -176,8 +176,6 @@ class Staff(BaseModel):
 
         top_three_companies += [None] * (3 - len(top_three_companies))
         top_three_skills = self.get_top_skills()
-        name = filter(None, [self.first_name, self.last_name])
-
         self.emails_in_bio = extract_emails_from_text(self.bio) if self.bio else None
         self.current_position = (
             sorted_experiences[0].title
@@ -189,7 +187,7 @@ class Staff(BaseModel):
             "id": self.id,
             "urn": self.urn,
             "profile_id": self.profile_id,
-            "name": self.name if self.name else " ".join(name) if name else None,
+            "name": self.name,
             "first_name": self.first_name,
             "last_name": self.last_name,
             "location": self.location,
