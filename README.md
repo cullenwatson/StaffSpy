@@ -190,17 +190,10 @@ Optional
 **Q: Scraped 999 staff members, with 869 hidden LinkedIn Members?**  
 A: It means your LinkedIn account is bad. Not sure how they classify it but unverified email, new account, low connections and a bunch of factors go into it.
 
---- 
+--
 
-**Q: How to get around 1,000 search result limit?**  
-**A:** I created a case study here to attempt to get around this: [Case Study](https://github.com/cullenwatson/StaffSpy/blob/main/case_studies/x_corp_staff.py)  
-We can block the user after searching and try many different locations and search terms to maximize results.
-
----
-
-<<<<<<< HEAD
 **Q: How to get around the 1000 search limit result?**  
-**A:**  I created a case study here: [📊 X Corp Staff Analysis Case Study](https://github.com/cullenwatson/StaffSpy/blob/main/case_studies/x_corp_staff.py)  
+**A:** Check the examples folder.
        We can block the user after searching and try many different locations and search terms to maximize results.
 ---
 
