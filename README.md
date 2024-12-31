@@ -24,10 +24,8 @@ _Python version >= [3.10](https://www.python.org/downloads/release/python-3100/)
 ### Usage
 
 ```python
-from pathlib import Path
 from staffspy import LinkedInAccount, SolverType, DriverType, BrowserType
 
-session_file = Path(__file__).resolve().parent / "session.pkl"
 account = LinkedInAccount(
     # if issues with webdriver, specify its exact location
     # driver_type=DriverType(
@@ -35,7 +33,7 @@ account = LinkedInAccount(
     #     executable_path="/Users/pc/chromedriver-mac-arm64/chromedriver"
     # ),
 
-    session_file=str(session_file), # save login cookies to only log in once (lasts a week or so)
+    session_file="session.pkl", # save login cookies to only log in once (lasts a week or so)
     log_level=1, # 0 for no logs
 )
 

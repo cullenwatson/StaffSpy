@@ -18,6 +18,8 @@ from staffspy.utils.driver_type import DriverType
 
 
 class LinkedInAccount:
+    """LinkedinAccount storing cookie data and providing outer facing methods for client"""
+
     solver_map = {
         SolverType.CAPSOLVER: CapSolver,
         SolverType.TWO_CAPTCHA: TwoCaptchaSolver,
@@ -41,6 +43,7 @@ class LinkedInAccount:
         self.driver_type = driver_type
         self.session = None
         self.linkedin_scraper = None
+        self.on_block = False
         self.login()
 
     def login(self):
@@ -62,17 +65,13 @@ class LinkedInAccount:
         extra_profile_data: bool = False,
         max_results: int = 1000,
         block: bool = False,
-    ) -> pd.DataFrame:
-        """Scrape staff from Linkedin
-        company_name - name of company to find staff frame
-        search_term - occupation / term to search for at the company
-        location - filter for staff at a location
-        extra_profile_data - fetches staff's experiences, schools, and more
-        max_results - amount of results you desire
-        block - if True, blocks all scraped users
-        """
+    ):
+        if self.on_block:
+            return logger.error(
+                "Account is on cooldown as a safety precaution after receiving a 429 (TooManyRequests) from LinkedIn. Please recreate a new LinkedInAccount to proceed."
+            )
+        """Main function entry point to scrape LinkedIn staff"""
         li_scraper = LinkedInScraper(self.session)
-
         staff = li_scraper.scrape_staff(
             company_name=company_name,
             extra_profile_data=extra_profile_data,
@@ -81,6 +80,8 @@ class LinkedInAccount:
             max_results=max_results,
             block=block,
         )
+        if li_scraper.on_block:
+            self.on_block = True
         staff_dicts = [staff.to_dict() for staff in staff]
         staff_df = pd.DataFrame(staff_dicts)
         if "estimated_age" in staff_df.columns:
@@ -101,13 +102,17 @@ class LinkedInAccount:
         logger.info(
             f"Scraped {len(staff_df)} staff members from {company_name}, with {len(linkedin_member_df)} hidden LinkedIn users"
         )
-        return staff_df
+        return staff_df.reset_index(drop=True)
 
-    def scrape_users(self, user_ids: list[str], block: bool = False) -> pd.DataFrame:
-        """Scrape users from Linkedin by user IDs
-        user_ids - list of LinkedIn user IDs
-        block - if True, blocks all scraped users
-        """
+    def scrape_users(
+        self, user_ids: list[str], block: bool = False
+    ) -> pd.DataFrame | None:
+        """Scrape users from Linkedin by user IDs"""
+        if self.on_block:
+            return logger.error(
+                "Account is on cooldown as a safety precaution after receiving a 429 (TooManyRequests) from LinkedIn. Please recreate a new LinkedInAccount to proceed."
+            )
+
         li_scraper = LinkedInScraper(self.session)
         li_scraper.num_staff = len(user_ids)
         users = [
@@ -142,6 +147,11 @@ class LinkedInAccount:
 
     def scrape_comments(self, post_ids: list[str]) -> pd.DataFrame:
         """Scrape comments from Linkedin by post IDs"""
+        if self.on_block:
+            return logger.error(
+                "Account is on cooldown as a safety precaution after receiving a 429 (TooManyRequests) from LinkedIn. Please recreate a new LinkedInAccount to proceed."
+            )
+
         comment_fetcher = CommentFetcher(self.session)
         all_comments = []
         for i, post_id in enumerate(post_ids, start=1):
@@ -161,9 +171,12 @@ class LinkedInAccount:
         self,
         company_names: list[str] = None,
     ) -> pd.DataFrame:
-        """Scrape company details from Linkedin
-        company_names - list of company names to find companies
-        """
+        """Scrape company details from Linkedin"""
+        if self.on_block:
+            return logger.error(
+                "Account is on cooldown as a safety precaution after receiving a 429 (TooManyRequests) from LinkedIn. Please recreate a new LinkedInAccount to proceed."
+            )
+
         if not company_names:
             raise ValueError("company_names list cannot be empty")
 

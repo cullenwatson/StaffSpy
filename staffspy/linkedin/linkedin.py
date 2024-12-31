@@ -48,6 +48,7 @@ class LinkedInScraper:
             self.location,
             self.raw_location,
         ) = (None, None, None, None, None, None, None, None, None)
+        self.on_block = False
         self.certs = CertificationFetcher(self.session)
         self.skills = SkillsFetcher(self.session)
         self.employees = EmployeeFetcher(self.session)
@@ -58,6 +59,7 @@ class LinkedInScraper:
 
     def search_companies(self, company_name: str):
         """Get the company id and staff count from the company name."""
+
         company_search_ep = self.company_search_ep.format(company=quote(company_name))
         self.session.headers["x-li-graphql-pegasus-client"] = "true"
         res = self.session.get(company_search_ep)
@@ -124,7 +126,8 @@ class LinkedInScraper:
                     res.text[:200],
                 )
 
-        logger.debug(f"res code {res.status_code} - fetched company ")
+        if not res.ok:
+            logger.debug(f"res code {res.status_code} - fetched company ")
         return res
 
     def _get_company_id_and_staff_count(self, company_name: str):
@@ -210,29 +213,31 @@ class LinkedInScraper:
             ),
         )
         res = self.session.get(ep)
-        logger.debug(f"employees, status code - {res.status_code}")
+        if not res.ok:
+            logger.debug(f"employees, status code - {res.status_code}")
         if res.status_code == 400:
             raise BadCookies("Outdated login, delete the session file to log in again")
         elif res.status_code == 429:
             raise TooManyRequests("429 Too Many Requests")
         if not res.ok:
-            return
+            return None, 0
         try:
             res_json = res.json()
         except json.decoder.JSONDecodeError:
             logger.debug(res.text[:200])
-            return False
+            return None, 0
 
         try:
             elements = res_json["data"]["searchDashClustersByAll"]["elements"]
+            total_count = res_json["data"]["searchDashClustersByAll"]["metadata"][
+                "totalResultCount"
+            ]
+
         except (KeyError, IndexError, TypeError):
             logger.debug(res_json)
-            return False
+            return None, 0
         new_staff = self.parse_staff(elements) if elements else []
-        logger.debug(
-            f"Fetched {len(new_staff)} employees at offset {offset} / {self.num_staff}"
-        )
-        return new_staff
+        return new_staff, total_count
 
     def fetch_location_id(self):
         """Fetch the location id for the location to be used in LinkedIn search"""
@@ -290,11 +295,8 @@ class LinkedInScraper:
             self.company_id, staff_count = self._get_company_id_and_staff_count(
                 company_name
             )
-        else:
-            staff_count = 1000
 
         staff_list: list[Staff] = []
-        self.num_staff = min(staff_count, max_results, 1000)
 
         if self.raw_location:
             try:
@@ -304,18 +306,31 @@ class LinkedInScraper:
                 return staff_list[:max_results]
 
         try:
-            for offset in range(0, self.num_staff, 50):
-                staff = self.fetch_staff(offset)
+            # Get initial results to get total count
+            initial_staff, total_count = self.fetch_staff(0)
+            if initial_staff:
+                staff_list.extend(initial_staff)
+            location = f", location: '{location}'" if location else ""
+            logger.info(
+                f"Saerch results for company: '{company_name}'{location} - {total_count:,} staff"
+            )
+
+            self.num_staff = min(total_count, max_results, 1000)
+            for offset in range(50, self.num_staff, 50):
+                staff, _ = self.fetch_staff(offset)
+                logger.debug(
+                    f"Staff members from search: {len(staff)} new, {len(staff_list) + len(staff)} total"
+                )
                 if not staff:
                     break
-                staff_list += staff
-
-            location = f", Location: '{location}'" if location else ""
+                staff_list.extend(staff)
+            location = f", location: '{location}'" if location else ""
             logger.info(
-                f"Found {len(staff_list)} staff at Company: '{company_name}'{location}"
+                f"Total results collected for company: '{company_name}'{location} - {len(staff_list)} results"
             )
         except (BadCookies, TooManyRequests) as e:
-            logger.error(str(e))
+            self.on_block = True
+            logger.error(f"Exiting early due to fatal error: {str(e)}")
             return staff_list[:max_results]
 
         reduced_staff_list = staff_list[:max_results]
@@ -424,7 +439,7 @@ class LinkedInScraper:
             )
         elif res.status_code == 403:
             logger.warning(
-                f"Failed to block user - status code 403, likely already blocked/unblocked in past 48 hours and on cooldown: {employee.profile_link}"
+                f"Failed to block user - status code 403, one possible reason is you have alread blocked/unblocked this person in past 48 hours and on cooldown: {employee.profile_link}"
             )
         else:
             logger.warning(
