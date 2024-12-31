@@ -1,6 +1,6 @@
 """
 CASE STUDY: X CORP EMPLOYEES
-RESULT: We retrieved 2153 profiles. Not sure how good this is. As X may only have 2,800 employees?
+RESULT: We retrieved 1087 profiles. Not as good as expected but still a good result for company that has 2800 employees.
 
 Strategies to get around LinkedIn 1000 result limit:
 1) It blocks the user after searching to prevent it from appearing in future searches
@@ -129,11 +129,11 @@ combined_df = pd.concat(dfs, ignore_index=True)
 # Filter out hidden profiles
 filtered_df = combined_df[combined_df["urn"] != "headless"]
 filtered_df = filtered_df[filtered_df["current_company"] == "X"]
-filtered_df = filtered_df.drop_duplicates(subset="urn")
+filtered_df = filtered_df.drop_duplicates(subset="id")
 
-# output all unique staff to csv
-total_urns = len(filtered_df["urn"])
-print(f"Total unique profiles: {total_urns}")
+filtered_urns = len(set(filtered_df["urn"]))
+print(f"Total unique profiles: {filtered_urns}")
+company_name = "x-corp"
 filtered_df.to_csv(
     f"output/{company_name}/final_result_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
     index=False,
