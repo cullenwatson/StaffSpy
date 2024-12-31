@@ -1,6 +1,7 @@
 """
 CASE STUDY: X CORP EMPLOYEES
 RESULT: We retrieved 1087 profiles. Not as good as expected but still a good result for company that has 2800 employees.
+final csv - https://drive.google.com/file/d/1aC-GF4RXf9wzGrpxQyGPBxlnLo2X5vm4
 
 Strategies to get around LinkedIn 1000 result limit:
 1) It blocks the user after searching to prevent it from appearing in future searches
