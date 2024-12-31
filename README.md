@@ -204,10 +204,6 @@ We can block the user after searching and try many different locations and searc
        We can block the user after searching and try many different locations and search terms to maximize results.
 ---
 
-
-
-=======
->>>>>>> 2007b9ea64b2807ebbb1c1a3439f2eb09bb71624
 **Q: Exception: driver not found for selenium?**  
 **A:** You need chromedriver installed (not the chrome): https://googlechromelabs.github.io/chrome-for-testing/#stable
 
