@@ -1,9 +1,8 @@
 """
 CASE STUDY: X CORP EMPLOYEES
+<<<<<<< HEAD
 RESULT: We retrieved 2153 profiles. Not as good as I was expecting, was aiming for more around 4k, but it's a good start.
-https://drive.google.com/file/d/1FNAu3D1gyA-Sa97ajI21LlbdOFZdrJRo/view
 
-This is an attempt to get every employee data at the company X.
 Strategies to get around LinkedIn 1000 result limit:
 1) It blocks the user after searching to prevent it from appearing in future searches
 2) it then tries to search by department and location to get more results.

@@ -176,15 +176,22 @@ Optional
 ---
 
 **Q: Can I get my account banned?**  
-**A:** It is a possibility, although there are no recorded incidents. Let me know if you are the first.
+**A:** It is a possibility, although there are no recorded incidents. Let me know if you are the first. However, to protect you, the code does not allow you to run it if LinkedIn is blocking you!
 
 ---
 
 **Q: Scraped 999 staff members, with 869 hidden LinkedIn Members?**  
 A: It means your LinkedIn account is bad. Not sure how they classify it but unverified email, new account, low connections and a bunch of factors go into it.
 
+--- 
+
+**Q: How to get around 1,000 search result limit?**  
+**A:** I created a case study here to attempt to get around this: [Case Study](https://github.com/cullenwatson/StaffSpy/blob/main/case_studies/x_corp_staff.py)  
+We can block the user after searching and try many different locations and search terms to maximize results.
+
 ---
 
+<<<<<<< HEAD
 **Q: How to get around the 1000 search limit result?**  
 **A:**  I created a case study here: [📊 X Corp Staff Analysis Case Study](https://github.com/cullenwatson/StaffSpy/blob/main/case_studies/x_corp_staff.py)  
        We can block the user after searching and try many different locations and search terms to maximize results.
@@ -192,6 +199,8 @@ A: It means your LinkedIn account is bad. Not sure how they classify it but unve
 
 
 
+=======
+>>>>>>> 2007b9ea64b2807ebbb1c1a3439f2eb09bb71624
 **Q: Exception: driver not found for selenium?**  
 **A:** You need chromedriver installed (not the chrome): https://googlechromelabs.github.io/chrome-for-testing/#stable
 
