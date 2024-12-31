@@ -185,6 +185,13 @@ Optional
 
 ---
 
+**Q: How to get around the 1000 search limit result?**  
+**A:** I created a case study here: [📊 X Corp Staff Analysis Case Study](https://github.com/cullenwatson/StaffSpy/blob/main/case_studies/x_corp_staff.py)  
+       We can block the user after searching and try many different locations and search terms to maximize results.
+---
+
+
+
 **Q: Exception: driver not found for selenium?**  
 **A:** You need chromedriver installed (not the chrome): https://googlechromelabs.github.io/chrome-for-testing/#stable
 
