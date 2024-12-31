@@ -176,7 +176,7 @@ Optional
 ---
 
 **Q: Can I get my account banned?**  
-**A:** It is a possibility, although there are no recorded incidents. Let me know if you are the first.
+**A:** It is a possibility, although there are no recorded incidents. Let me know if you are the first. However, to protect you, the code does not allow you to run it if LinkedIn is blocking you!
 
 ---
 
