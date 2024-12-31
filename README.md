@@ -183,18 +183,18 @@ Optional
 ---
 
 **Q: Can I get my account banned?**  
-**A:** It is a possibility, although there are no recorded incidents. Let me know if you are the first. However, to protect you, the code does not allow you to run it if LinkedIn is blocking you!
+**A:** It is a possibility, although there are no recorded incidents. Let me know if you are the first. However, to protect you, the code does not allow you to run it if LinkedIn is blocking you
 
 ---
 
 **Q: Scraped 999 staff members, with 869 hidden LinkedIn Members?**  
-A: It means your LinkedIn account is bad. Not sure how they classify it but unverified email, new account, low connections and a bunch of factors go into it.
+**A:** It means your LinkedIn account is bad. Not sure how they classify it but unverified email, new account, low connections and a bunch of factors go into it.
 
---
+---
 
 **Q: How to get around the 1000 search limit result?**  
-**A:** Check the examples folder.
-       We can block the user after searching and try many different locations and search terms to maximize results.
+**A:** Check the examples folder. We can block the user after searching and try many different locations and search terms to maximize results.
+
 ---
 
 **Q: Exception: driver not found for selenium?**  
