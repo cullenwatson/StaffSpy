@@ -18,6 +18,7 @@ from staffspy.linkedin.certifications import CertificationFetcher
 from staffspy.linkedin.employee import EmployeeFetcher
 from staffspy.linkedin.employee_bio import EmployeeBioFetcher
 from staffspy.linkedin.experiences import ExperiencesFetcher
+from staffspy.linkedin.languages import LanguagesFetcher
 from staffspy.linkedin.schools import SchoolsFetcher
 from staffspy.linkedin.skills import SkillsFetcher
 from staffspy.utils.models import Staff
@@ -53,6 +54,7 @@ class LinkedInScraper:
         self.schools = SchoolsFetcher(self.session)
         self.experiences = ExperiencesFetcher(self.session)
         self.bio = EmployeeBioFetcher(self.session)
+        self.languages = LanguagesFetcher(self.session)
 
     def search_companies(self, company_name: str):
         """Get the company id and staff count from the company name."""
@@ -343,8 +345,9 @@ class LinkedInScraper:
             f"Fetching employee data for {employee.id} {index:>4} / {self.num_staff} - {employee.profile_link}"
         )
 
-        with ThreadPoolExecutor(max_workers=6) as executor:
+        with ThreadPoolExecutor(max_workers=7) as executor:
             tasks = {
+                executor.submit(self.languages.fetch_languages, employee): "lanaguages",
                 executor.submit(
                     self.employees.fetch_employee, employee, self.domain
                 ): "employee",

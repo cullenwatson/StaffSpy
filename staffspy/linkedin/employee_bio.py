@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 class EmployeeBioFetcher:
     def __init__(self, session):
         self.session = session
-        self.endpoint = "https://www.linkedin.com/voyager/api/graphql?queryId=voyagerIdentityDashProfileCards.313097d3cf3cea5e20daffd8b5b635f2&queryName=ProfileTabInitialCards&variables=(count:50,profileUrn:urn%3Ali%3Afsd_profile%3A{employee_id})"
+        self.endpoint = "https://www.linkedin.com/voyager/api/graphql?queryId=voyagerIdentityDashProfileComponents.9117695ef207012719e3e0681c667e14&queryName=ProfileComponentsBySectionType&variables=(tabIndex:0,sectionType:languages,profileUrn:urn%3Ali%3Afsd_profile%3A{employee_id},count:50)"
 
     def fetch_employee_bio(self, base_staff):
         ep = self.endpoint.format(employee_id=base_staff.id)

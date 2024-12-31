@@ -128,6 +128,7 @@ class Staff(BaseModel):
     experiences: list[Experience] | None = None
     certifications: list[Certification] | None = None
     schools: list[School] | None = None
+    languages: list[str] | None = None
 
     def get_top_skills(self):
         top_three_skills = []
@@ -229,6 +230,7 @@ class Staff(BaseModel):
                 if self.certifications
                 else None
             ),
+            "languages": self.languages,
             "emails_in_bio": (
                 ", ".join(self.emails_in_bio) if self.emails_in_bio else None
             ),
