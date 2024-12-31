@@ -9,6 +9,7 @@ _why pay $100/mo for LSN when you could do it for free and get a nice csv to go 
 - Scrapes staff from a company on **LinkedIn**
 - Obtains skills, experiences, certifications & more
 - Or fetch individuals users / comments on posts
+- Scrape your own LinkedIn connections with details
 - Aggregates the employees in a Pandas DataFrame
 
 [Video Guide for StaffSpy](https://youtu.be/DNFmjvpZBTs) - _updated for release v0.2.18_
@@ -61,10 +62,17 @@ companies = account.scrape_companies(
     company_names=['openai', 'microsoft']
 )
 
+# fetch connections
+connections = account.scrape_connections(
+    extra_profile_data=True,
+    max_results=50
+)
+
 staff.to_csv("staff.csv", index=False)
 users.to_csv("users.csv", index=False)
 comments.to_csv("comments.csv", index=False)
 companies.to_csv("companies.csv", index=False)
+connections.to_csv("connections.csv", index=False)
 ```
 
 #### Browser login
@@ -168,6 +176,16 @@ Optional
 |     e.g. ['openai', 'microsoft', 'google']
 ```
 
+
+### Parameters for `scrape_connections()`
+
+```plaintext
+├── max_results (int):
+|    maximum number of connections to fetch (default is all)
+|
+├── extra_profile_data (bool):
+|    gets all profile info
+```
 
 ### LinkedIn notes
 

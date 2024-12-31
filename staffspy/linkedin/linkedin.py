@@ -33,6 +33,7 @@ class LinkedInScraper:
     public_user_id_ep = (
         "https://www.linkedin.com/voyager/api/identity/profiles/{user_id}/profileView"
     )
+    connections_ep = "https://www.linkedin.com/voyager/api/graphql?queryId=voyagerSearchDashClusters.dfcd3603c2779eddd541f572936f4324&queryName=SearchClusterCollection&variables=(query:(queryParameters:(resultType:List(FOLLOWERS)),flagshipSearchIntent:MYNETWORK_CURATION_HUB,includeFiltersInResponse:true),count:50,origin:CurationHub,start:{offset})"
     block_user_ep = "https://www.linkedin.com/voyager/api/voyagerTrustDashContentReportingForm?action=entityBlock"
 
     def __init__(self, session: requests.Session):
@@ -164,9 +165,11 @@ class LinkedInScraper:
                 person = card.get("item", {}).get("entityResult", {})
                 if not person:
                     continue
-                pattern = r"urn:li:fsd_profile:([^,]+),SEARCH_SRP"
+                pattern = (
+                    r"urn:li:fsd_profile:([^,]+),(?:SEARCH_SRP|MYNETWORK_CURATION_HUB)"
+                )
                 match = re.search(pattern, person["entityUrn"])
-                linkedin_id = match.group(1)
+                linkedin_id = match.group(1) if match else None
                 person_urn = person["trackingUrn"].split(":")[-1]
 
                 name = person["title"]["text"].strip()
@@ -224,7 +227,7 @@ class LinkedInScraper:
         try:
             res_json = res.json()
         except json.decoder.JSONDecodeError:
-            logger.debug(res.text[:200])
+            logger.debug(res.text)
             return None, 0
 
         try:
@@ -238,6 +241,78 @@ class LinkedInScraper:
             return None, 0
         new_staff = self.parse_staff(elements) if elements else []
         return new_staff, total_count
+
+    def fetch_connections_page(self, offset: int):
+        self.session.headers["x-li-graphql-pegasus-client"] = "true"
+        res = self.session.get(self.connections_ep.format(offset=offset))
+        self.session.headers.pop("x-li-graphql-pegasus-client", "")
+        if not res.ok:
+            logger.debug(f"employees, status code - {res.status_code}")
+        if res.status_code == 400:
+            raise BadCookies("Outdated login, delete the session file to log in again")
+        elif res.status_code == 429:
+            raise TooManyRequests("429 Too Many Requests")
+        if not res.ok:
+            return
+        try:
+            res_json = res.json()
+        except json.decoder.JSONDecodeError:
+            logger.debug(res.text)
+            return
+
+        try:
+            elements = res_json["data"]["searchDashClustersByAll"]["elements"]
+            total_count = res_json["data"]["searchDashClustersByAll"]["metadata"][
+                "totalResultCount"
+            ]
+
+        except (KeyError, IndexError, TypeError):
+            logger.debug(res_json)
+            return
+
+        new_staff = self.parse_staff(elements) if elements else []
+        return new_staff, total_count
+
+    def scrape_connections(
+        self,
+        max_results: int = 10**8,
+        extra_profile_data: bool = False,
+    ):
+        self.search_term = "connections"
+        staff_list: list[Staff] = []
+
+        try:
+            initial_staff, total_search_result_count = self.fetch_connections_page(0)
+            if initial_staff:
+                staff_list.extend(initial_staff)
+
+            self.num_staff = min(total_search_result_count, max_results)
+            for offset in range(50, self.num_staff, 50):
+                staff, _ = self.fetch_connections_page(offset)
+                logger.debug(
+                    f"Connections from search: {len(staff)} new, {len(staff_list) + len(staff)} total"
+                )
+                if not staff:
+                    break
+                staff_list.extend(staff)
+        except (BadCookies, TooManyRequests) as e:
+            self.on_block = True
+            logger.error(f"Exiting early due to fatal error: {str(e)}")
+            return staff_list[:max_results]
+
+        reduced_staff_list = staff_list[:max_results]
+
+        non_restricted = list(
+            filter(lambda x: x.name != "LinkedIn Member", reduced_staff_list)
+        )
+
+        if extra_profile_data:
+            try:
+                for i, employee in enumerate(non_restricted, start=1):
+                    self.fetch_all_info_for_employee(employee, i)
+            except TooManyRequests as e:
+                logger.error(str(e))
+        return reduced_staff_list
 
     def fetch_location_id(self):
         """Fetch the location id for the location to be used in LinkedIn search"""
@@ -333,7 +408,6 @@ class LinkedInScraper:
             return staff_list[:max_results]
 
         reduced_staff_list = staff_list[:max_results]
-
         non_restricted = list(
             filter(lambda x: x.name != "LinkedIn Member", reduced_staff_list)
         )
@@ -352,7 +426,7 @@ class LinkedInScraper:
     def fetch_all_info_for_employee(self, employee: Staff, index: int):
         """Simultaniously fetch all the data for an employee"""
         logger.info(
-            f"Fetching employee data for {employee.id} {index:>4} / {self.num_staff} - {employee.profile_link}"
+            f"Fetching data for account {employee.id} {index:>4} / {self.num_staff} - {employee.profile_link}"
         )
 
         with ThreadPoolExecutor(max_workers=7) as executor:

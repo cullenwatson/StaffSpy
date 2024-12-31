@@ -435,5 +435,17 @@ def parse_company_data(json_data, search_term=None):
     return company_df
 
 
+def clean_df(staff_df):
+    if "estimated_age" in staff_df.columns:
+        staff_df["estimated_age"] = staff_df["estimated_age"].astype("Int64")
+    if "followers" in staff_df.columns:
+        staff_df["followers"] = staff_df["followers"].astype("Int64")
+    if "connections" in staff_df.columns:
+        staff_df["connections"] = staff_df["connections"].astype("Int64")
+    if "mutuals" in staff_df.columns:
+        staff_df["mutuals"] = staff_df["mutuals"].astype("Int64")
+    return staff_df
+
+
 if __name__ == "__main__":
     p = parse_dates("May 2018 - Jun 2024")

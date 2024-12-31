@@ -13,6 +13,7 @@ from staffspy.utils.utils import (
     Login,
     parse_company_data,
     extract_emails_from_text,
+    clean_df,
 )
 from staffspy.utils.driver_type import DriverType
 
@@ -84,18 +85,10 @@ class LinkedInAccount:
             self.on_block = True
         staff_dicts = [staff.to_dict() for staff in staff]
         staff_df = pd.DataFrame(staff_dicts)
-        if "estimated_age" in staff_df.columns:
-            staff_df["estimated_age"] = staff_df["estimated_age"].astype("Int64")
-        if "followers" in staff_df.columns:
-            staff_df["followers"] = staff_df["followers"].astype("Int64")
-        if "connections" in staff_df.columns:
-            staff_df["connections"] = staff_df["connections"].astype("Int64")
-        if "mutuals" in staff_df.columns:
-            staff_df["mutuals"] = staff_df["mutuals"].astype("Int64")
-
         if staff_df.empty:
             return staff_df
 
+        staff_df = clean_df(staff_df)
         linkedin_member_df = staff_df[staff_df["name"] == "LinkedIn Member"]
         non_linkedin_member_df = staff_df[staff_df["name"] != "LinkedIn Member"]
         staff_df = pd.concat([non_linkedin_member_df, linkedin_member_df])
@@ -203,3 +196,27 @@ class LinkedInAccount:
             return pd.DataFrame()
 
         return pd.concat(company_dfs, ignore_index=True)
+
+    def scrape_connections(
+        self,
+        max_results: int = 10**8,
+        extra_profile_data: bool = False,
+    ) -> pd.DataFrame:
+        """Scrape connections from Linkedin"""
+        if self.on_block:
+            return logger.error(
+                "Account is on cooldown as a safety precaution after receiving a 429 (TooManyRequests) from LinkedIn. Please recreate a new LinkedInAccount to proceed."
+            )
+        li_scraper = LinkedInScraper(self.session)
+
+        connections = li_scraper.scrape_connections(
+            max_results=max_results,
+            extra_profile_data=extra_profile_data,
+        )
+        connections_df = pd.DataFrame()
+        if connections:
+            staff_dicts = [staff.to_dict() for staff in connections]
+            connections_df = pd.DataFrame(staff_dicts)
+            connections_df = clean_df(connections_df)
+
+        return connections_df
