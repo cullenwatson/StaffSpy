@@ -100,7 +100,7 @@ class LinkedInAccount:
         non_linkedin_member_df = staff_df[staff_df["name"] != "LinkedIn Member"]
         staff_df = pd.concat([non_linkedin_member_df, linkedin_member_df])
         logger.info(
-            f"Staff from {company_name}: {len(staff_df)} total, {len(linkedin_member_df)} hidden, {len(staff_df) - len(linkedin_member_df)} visible"
+            f"3) Staff from {company_name}: {len(staff_df)} total, {len(linkedin_member_df)} hidden, {len(staff_df) - len(linkedin_member_df)} visible"
         )
         return staff_df.reset_index(drop=True)
 
