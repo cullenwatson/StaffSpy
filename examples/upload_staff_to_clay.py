@@ -1,3 +1,7 @@
+"""
+Uploads staff to the Clay platform to then further enrich the staff (e.g. waterfall strategy to find their verified emails)
+"""
+
 from staffspy import LinkedInAccount
 from staffspy.utils.utils import upload_to_clay
 
