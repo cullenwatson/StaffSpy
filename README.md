@@ -28,8 +28,7 @@ _Python version >= [3.10](https://www.python.org/downloads/release/python-3100/)
 from staffspy import LinkedInAccount, SolverType, DriverType, BrowserType
 
 account = LinkedInAccount(
-    # if issues with webdriver, specify its exact location
-    # driver_type=DriverType(
+    # driver_type=DriverType( # if issues with webdriver, specify its exact location, download link in the FAQ
     #     browser_type=BrowserType.CHROME,
     #     executable_path="/Users/pc/chromedriver-mac-arm64/chromedriver"
     # ),
