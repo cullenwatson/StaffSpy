@@ -32,7 +32,6 @@ account = LinkedInAccount(
     #     browser_type=BrowserType.CHROME,
     #     executable_path="/Users/pc/chromedriver-mac-arm64/chromedriver"
     # ),
-
     session_file="session.pkl", # save login cookies to only log in once (lasts a week or so)
     log_level=1, # 0 for no logs
 )
