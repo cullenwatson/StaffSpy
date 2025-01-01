@@ -62,10 +62,8 @@ companies = account.scrape_companies(
     company_names=['openai', 'microsoft']
 )
 
+# export any of the results to csv
 staff.to_csv("staff.csv", index=False)
-users.to_csv("users.csv", index=False)
-comments.to_csv("comments.csv", index=False)
-companies.to_csv("companies.csv", index=False)
 ```
 
 #### Browser login
