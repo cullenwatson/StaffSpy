@@ -44,10 +44,13 @@ staff = account.scrape_staff(
     extra_profile_data=True, # fetch all past experiences, schools, & skills
     max_results=50, # can go up to 1000
     # block=True # if you want to block the user after scraping, to exclude from future search results
+    # connect=True # if you want to connect with the users till you hit your limit
 )
 # or fetch by user ids
 users = account.scrape_users(
     user_ids=['williamhgates', 'rbranson', 'jeffweiner08']
+    # conect=True,
+    # block=True
 )
 
 # fetch all comments on two of Bill Gates' posts 
