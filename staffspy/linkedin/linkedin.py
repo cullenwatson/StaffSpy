@@ -13,8 +13,8 @@ from urllib.parse import quote, unquote
 import requests
 
 import staffspy.utils.utils as utils
-from linkedin.contact_info import ContactInfoFetcher
 from staffspy.utils.exceptions import TooManyRequests, BadCookies, GeoUrnNotFound
+from staffspy.linkedin.contact_info import ContactInfoFetcher
 from staffspy.linkedin.certifications import CertificationFetcher
 from staffspy.linkedin.employee import EmployeeFetcher
 from staffspy.linkedin.employee_bio import EmployeeBioFetcher
@@ -36,6 +36,7 @@ class LinkedInScraper:
     )
     connections_ep = "https://www.linkedin.com/voyager/api/graphql?queryId=voyagerSearchDashClusters.dfcd3603c2779eddd541f572936f4324&queryName=SearchClusterCollection&variables=(query:(queryParameters:(resultType:List(FOLLOWERS)),flagshipSearchIntent:MYNETWORK_CURATION_HUB,includeFiltersInResponse:true),count:50,origin:CurationHub,start:{offset})"
     block_user_ep = "https://www.linkedin.com/voyager/api/voyagerTrustDashContentReportingForm?action=entityBlock"
+    connect_to_user_ep = "https://www.linkedin.com/voyager/api/voyagerRelationshipsDashMemberRelationships?action=verifyQuotaAndCreateV2&decorationId=com.linkedin.voyager.dash.deco.relationships.InvitationCreationResultWithInvitee-1"
 
     def __init__(self, session: requests.Session):
         self.session = session
@@ -360,6 +361,7 @@ class LinkedInScraper:
         extra_profile_data: bool,
         max_results: int,
         block: bool,
+        connect: bool,
     ):
         """Main function entry point to scrape LinkedIn staff"""
         self.search_term = search_term
@@ -418,8 +420,11 @@ class LinkedInScraper:
             try:
                 for i, employee in enumerate(non_restricted, start=1):
                     self.fetch_all_info_for_employee(employee, i)
-                    if block and employee.urn != "headless":
+                    if block:
                         self.block_user(employee)
+                    elif connect:
+                        self.connect_user(employee)
+
             except TooManyRequests as e:
                 logger.error(str(e))
 
@@ -519,4 +524,39 @@ class LinkedInScraper:
         else:
             logger.warning(
                 f"Failed to block user - status code {res.status_code} {employee.id}: {employee.name}"
+            )
+
+    def connect_user(self, employee: Staff) -> None:
+        """Connects with a user on LinkedIn given their profile id"""
+        if employee.urn == "headless":
+            return
+        if employee.is_connection != "no":
+            return logger.info(
+                f"Already connected or pending connection request to user {employee.id} - {employee.profile_link}"
+            )
+        self.session.headers["Content-Type"] = (
+            "application/x-protobuf2; symbol-table=voyager-20757"
+        )
+        body = (
+            b"\x00\x01\x03\xe2\x05\x00\x01\x03\xd3w\x00\x01\x03\xd5\x06\x14:urn:li:fsd_profile:"
+            + employee.id.encode()
+        )
+
+        res = self.session.post(
+            self.connect_to_user_ep,
+            data=body,
+        )
+        self.session.headers.pop("Content-Type", "")
+
+        if res.ok:
+            logger.info(
+                f"Successfully sent connection request to user {employee.id} - {employee.profile_link}"
+            )
+        elif res.status_code == 403:
+            logger.warning(
+                f"Failed to connect to user - status code 403: {employee.id} - {employee.profile_link}"
+            )
+        else:
+            logger.warning(
+                f"Failed to connect to user - status code {res.status_code} {employee.id} -{employee.profile_link}"
             )

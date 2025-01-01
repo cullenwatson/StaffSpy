@@ -285,7 +285,7 @@ class Login:
         )
         if not self.check_logged_in(session):
             raise Exception(
-                "Failed to log in. Likely dated session file and cookies have expired. Delete the file and rerun the LinkedAccount() code"
+                "Failed to log in. Likely outdated session file and cookies have expired. Delete the file and rerun the LinkedAccount() code"
             )
         return session
 

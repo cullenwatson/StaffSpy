@@ -132,7 +132,7 @@ class Staff(BaseModel):
     followers: int | None = None
     connections: int | None = None
     mutual_connections: int | None = None
-    is_connection: bool | None = None
+    is_connection: str | None = None  # yes, no, pending
     location: str | None = None
     company: str | None = None
     school: str | None = None

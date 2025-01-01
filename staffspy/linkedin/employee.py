@@ -66,10 +66,23 @@ class EmployeeFetcher:
                 ]["targetInviteeResolutionResult"]["headline"]
         except:
             pass
-        emp.is_connection = (
-            next(iter(emp_dict["memberRelationship"]["memberRelationshipUnion"]))
-            == "connection"
+        union_type = next(
+            iter(emp_dict["memberRelationship"]["memberRelationshipUnion"])
         )
+        emp.is_connection = "no"
+        if union_type == "connection":
+            emp.is_connection = "yes"
+        elif union_type == "noConnection":
+            invitation = (
+                emp_dict["memberRelationship"]["memberRelationshipUnion"][
+                    "noConnection"
+                ]
+                .get("invitationUnion", {})
+                .get("invitation", {})
+            )
+            if invitation and invitation.get("invitationState") == "PENDING":
+                emp.is_connection = "pending"
+
         emp.open_to_work = emp_dict["profilePicture"].get("frameType") == "OPEN_TO_WORK"
         emp.is_hiring = emp_dict["profilePicture"].get("frameType") == "HIRING"
 

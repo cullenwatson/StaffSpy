@@ -73,6 +73,7 @@ class LinkedInAccount:
         extra_profile_data: bool = False,
         max_results: int = 1000,
         block: bool = False,
+        connect: bool = False,
     ):
         if self.on_block:
             return logger.error(
@@ -87,6 +88,7 @@ class LinkedInAccount:
             location=location,
             max_results=max_results,
             block=block,
+            connect=connect,
         )
         if li_scraper.on_block:
             self.on_block = True
@@ -105,7 +107,7 @@ class LinkedInAccount:
         return staff_df.reset_index(drop=True)
 
     def scrape_users(
-        self, user_ids: list[str], block: bool = False
+        self, user_ids: list[str], block: bool = False, connect: bool = False
     ) -> pd.DataFrame | None:
         """Scrape users from Linkedin by user IDs"""
         if self.on_block:
@@ -133,6 +135,8 @@ class LinkedInAccount:
                 li_scraper.fetch_all_info_for_employee(user, i)
                 if block:
                     li_scraper.block_user(user)
+                elif connect:
+                    li_scraper.connect_user(user)
 
         users_dicts = [user.to_dict() for user in users if user.id]
         users_df = pd.DataFrame(users_dicts)
