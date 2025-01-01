@@ -9,7 +9,6 @@ _why pay $100/mo for LSN when you could do it for free and get a nice csv to go 
 - Scrapes staff from a company on **LinkedIn**
 - Obtains skills, experiences, certifications & more
 - Or fetch individuals users / comments on posts
-- Scrape your own LinkedIn connections with details
 - Aggregates the employees in a Pandas DataFrame
 
 [Video Guide for StaffSpy](https://youtu.be/DNFmjvpZBTs) - _updated for release v0.2.18_
@@ -62,17 +61,10 @@ companies = account.scrape_companies(
     company_names=['openai', 'microsoft']
 )
 
-# fetch connections
-connections = account.scrape_connections(
-    extra_profile_data=True,
-    max_results=50
-)
-
 staff.to_csv("staff.csv", index=False)
 users.to_csv("users.csv", index=False)
 comments.to_csv("comments.csv", index=False)
 companies.to_csv("companies.csv", index=False)
-connections.to_csv("connections.csv", index=False)
 ```
 
 #### Browser login
@@ -181,10 +173,11 @@ Optional
 
 ```plaintext
 ├── max_results (int):
-|    maximum number of connections to fetch (default is all)
+|    maximum number of connections to fetch (default is very high)
+|    e.g. 50 to fetch first 50 connections
 |
 ├── extra_profile_data (bool):
-|    gets all profile info
+|    fetches educations, experiences, skills, certifications for each connection (Default false)
 ```
 
 ### LinkedIn notes
@@ -282,8 +275,16 @@ Staff
 │   ├── cert_id
 │   └── cert_link
 │
-└── Educational Background
-    ├── years
-    ├── school
-    └── degree
+├── Educational Background
+|   ├── years
+|   ├── school
+|   └── degree
+│
+└── Connection Info (only when a connection and enabled on their profile)
+    ├── email_address
+    ├── address
+    ├── birthday
+    ├── websites
+    ├── phone_numbers
+    └── created_at
 ```

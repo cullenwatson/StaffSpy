@@ -13,6 +13,7 @@ from urllib.parse import quote, unquote
 import requests
 
 import staffspy.utils.utils as utils
+from linkedin.contact_info import ContactInfoFetcher
 from staffspy.utils.exceptions import TooManyRequests, BadCookies, GeoUrnNotFound
 from staffspy.linkedin.certifications import CertificationFetcher
 from staffspy.linkedin.employee import EmployeeFetcher
@@ -57,6 +58,7 @@ class LinkedInScraper:
         self.experiences = ExperiencesFetcher(self.session)
         self.bio = EmployeeBioFetcher(self.session)
         self.languages = LanguagesFetcher(self.session)
+        self.contact = ContactInfoFetcher(self.session)
 
     def search_companies(self, company_name: str):
         """Get the company id and staff count from the company name."""
@@ -429,25 +431,27 @@ class LinkedInScraper:
             f"Fetching data for account {employee.id} {index:>4} / {self.num_staff} - {employee.profile_link}"
         )
 
-        with ThreadPoolExecutor(max_workers=7) as executor:
+        task_functions = [
+            (self.employees.fetch_employee, (employee, self.domain), "employee"),
+            (self.skills.fetch_skills, (employee,), "skills"),
+            (self.experiences.fetch_experiences, (employee,), "experiences"),
+            (self.certs.fetch_certifications, (employee,), "certifications"),
+            (self.schools.fetch_schools, (employee,), "schools"),
+            (self.bio.fetch_employee_bio, (employee,), "bio"),
+            (self.languages.fetch_languages, (employee,), "languages"),
+        ]
+
+        with ThreadPoolExecutor(max_workers=len(task_functions)) as executor:
             tasks = {
-                executor.submit(
-                    self.employees.fetch_employee, employee, self.domain
-                ): "employee",
-                executor.submit(self.skills.fetch_skills, employee): "skills",
-                executor.submit(self.experiences.fetch_experiences, employee): (
-                    "experiences"
-                ),
-                executor.submit(self.certs.fetch_certifications, employee): (
-                    "certifications"
-                ),
-                executor.submit(self.schools.fetch_schools, employee): "schools",
-                executor.submit(self.bio.fetch_employee_bio, employee): "bio",
-                executor.submit(self.languages.fetch_languages, employee): "lanaguages",
+                executor.submit(func, *args): name
+                for func, args, name in task_functions
             }
 
             for future in as_completed(tasks):
                 result = future.result()
+
+        if employee.is_connection:
+            self.contact.fetch_contact_info(employee)
 
     def fetch_user_profile_data_from_public_id(self, user_id: str, key: str):
         """Fetches data given the public LinkedIn user id"""
