@@ -60,6 +60,12 @@ companies = account.scrape_companies(
     company_names=['openai', 'microsoft']
 )
 
+# fetch connections (also gets their contact info if available)
+connections = account.scrape_connections(
+    extra_profile_data=True,
+    max_results=50
+)
+
 # export any of the results to csv
 staff.to_csv("staff.csv", index=False)
 ```
@@ -170,11 +176,10 @@ Optional
 
 ```plaintext
 ├── max_results (int):
-|    maximum number of connections to fetch (default is very high)
-|    e.g. 50 to fetch first 50 connections
+|    maximum number of connections to fetch
 |
 ├── extra_profile_data (bool):
-|    fetches educations, experiences, skills, certifications for each connection (Default false)
+|    fetches educations, experiences, skills, certifications & contact info for each connection (Default false)
 ```
 
 ### LinkedIn notes
