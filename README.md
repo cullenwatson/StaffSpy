@@ -143,6 +143,9 @@ Optional
 |
 ├── block (bool):
 |    whether to block the user after scraping
+|
+├── connect (bool):
+|    whether to conncet with the user after scraping
 ```
 
 ### Parameters for `scrape_users()`
@@ -154,6 +157,9 @@ Optional
 |
 ├── block (bool):
 |    whether to block the user after scraping
+|
+├── connect (bool):
+|    whether to conncet with the user after scraping
 ```
 
 
