@@ -15,7 +15,14 @@ from staffspy.utils.utils import (
     extract_emails_from_text,
     clean_df,
 )
-from staffspy.utils.driver_type import DriverType
+from staffspy.utils.driver_type import DriverType, BrowserType
+
+__all__ = [
+    "LinkedInAccount",
+    "SolverType",
+    "DriverType",
+    "BrowserType",
+]
 
 
 class LinkedInAccount:

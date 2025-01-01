@@ -447,5 +447,23 @@ def clean_df(staff_df):
     return staff_df
 
 
+def upload_to_clay(webhook_url: str, data: pd.DataFrame):
+    records = data.to_dict("records")
+
+    responses = []
+    for i, row in enumerate(records, start=1):
+        try:
+            response = requests.post(
+                webhook_url, headers={"Accept": "application/json"}, json=row
+            )
+            response.raise_for_status()
+            logger.info(f"Uploaded row to Clay: {i} / {len(records)}")
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Failed to upload row to Clay: {str(e)}")
+            responses.append({"error": str(e), "data": row})
+
+    return responses
+
+
 if __name__ == "__main__":
     p = parse_dates("May 2018 - Jun 2024")
