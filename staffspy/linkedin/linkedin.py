@@ -52,6 +52,7 @@ class LinkedInScraper:
             self.raw_location,
         ) = (None, None, None, None, None, None, None, None, None)
         self.on_block = False
+        self.connect_block = False
         self.certs = CertificationFetcher(self.session)
         self.skills = SkillsFetcher(self.session)
         self.employees = EmployeeFetcher(self.session)
@@ -528,6 +529,10 @@ class LinkedInScraper:
 
     def connect_user(self, employee: Staff) -> None:
         """Connects with a user on LinkedIn given their profile id"""
+        if self.connect_block:
+            return logger.info(
+                f"Skipping connection request for user due to previou block: {employee.id} - {employee.profile_link} "
+            )
         if employee.urn == "headless":
             return
         if employee.is_connection != "no":
@@ -552,9 +557,10 @@ class LinkedInScraper:
             logger.info(
                 f"Successfully sent connection request to user {employee.id} - {employee.profile_link}"
             )
-        elif res.status_code == 403:
+        elif res.status_code == 429:
+            self.connect_block = True
             logger.warning(
-                f"Failed to connect to user - status code 403: {employee.id} - {employee.profile_link}"
+                f"Failed to connect to user - status code 429 - pausing connection requests for this scrape: {employee.id} - {employee.profile_link}"
             )
         else:
             logger.warning(
