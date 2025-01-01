@@ -49,7 +49,7 @@ staff = account.scrape_staff(
 # or fetch by user ids
 users = account.scrape_users(
     user_ids=['williamhgates', 'rbranson', 'jeffweiner08']
-    # conect=True,
+    # connect=True,
     # block=True
 )
 
