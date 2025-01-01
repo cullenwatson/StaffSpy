@@ -8,7 +8,8 @@ _why pay $100/mo for LSN when you could do it for free and get a nice csv to go 
 
 - Scrapes staff from a company on **LinkedIn**
 - Obtains skills, experiences, certifications & more
-- Or fetch individuals users / comments on posts
+- Fetch individuals users / comments on posts
+- Export all your connections with their contact info
 - Aggregates the employees in a Pandas DataFrame
 
 [Video Guide for StaffSpy](https://youtu.be/DNFmjvpZBTs) - _updated for release v0.2.18_
