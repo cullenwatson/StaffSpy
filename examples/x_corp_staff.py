@@ -4,8 +4,8 @@ RESULT: We retrieved 1087 profiles. Not as good as expected but still a good res
 final csv - https://drive.google.com/file/d/1aC-GF4RXf9wzGrpxQyGPBxlnLo2X5vm4
 
 Strategies to get around LinkedIn 1000 result limit:
-1) It blocks the user after searching to prevent it from appearing in future searches
-2) it then tries to search by department and location to get more results.
+1) It blocks the user after searching to prevent it from appearing in future searches.
+2) It tries various searches with department and location to get more results.
 
 Lastly, it saves the results in CSV files and then combines them into one DataFrame at the end to view the results.
 """
