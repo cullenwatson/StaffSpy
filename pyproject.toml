@@ -2,7 +2,7 @@
 name = "staffspy"
 version = "0.2.25"
 description = "Staff scraper library for LinkedIn"
-authors = ["Cullen Watson <cullen@bunsly.com>"]
+authors = ["Cullen Watson <cullen@cullenwatson.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
