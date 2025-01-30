@@ -17,7 +17,7 @@ _why pay $100/mo for LSN when you could do it for free and get a nice csv to go 
 ### Installation
 
 ```
-pip install -U staffspy[browser]
+pip install -U "staffspy[browser]"
 ```
 
 _Python version >= [3.10](https://www.python.org/downloads/release/python-3100/) required_
