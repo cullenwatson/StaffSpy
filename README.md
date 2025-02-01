@@ -20,6 +20,12 @@ _why pay $100/mo for LSN when you could do it for free and get a nice csv to go 
 pip install -U "staffspy[browser]"
 ```
 
+Or for latest code from this repo directly
+
+```
+pip install "git+https://github.com/cullenwatson/StaffSpy.git#egg=staffspy[browser]"
+```
+
 _Python version >= [3.10](https://www.python.org/downloads/release/python-3100/) required_
 
 ### Usage
@@ -44,7 +50,7 @@ staff = account.scrape_staff(
     extra_profile_data=True, # fetch all past experiences, schools, & skills
     max_results=50, # can go up to 1000
     # block=True # if you want to block the user after scraping, to exclude from future search results
-    # connect=True # if you want to connect with the users till you hit your limit
+    # connect=True # if you want to connect with the users until you hit your limit
 )
 # or fetch by user ids
 users = account.scrape_users(

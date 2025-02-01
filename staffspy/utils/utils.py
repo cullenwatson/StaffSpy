@@ -61,7 +61,7 @@ def get_webdriver(driver_type: Optional[DriverType] = None):
         from selenium.webdriver.firefox.service import Service as FirefoxService
     except ImportError as e:
         raise Exception(
-            "install package `pip install staffspy[browser]` to login with browser"
+            'install package `pip install "staffspy[browser]"` to login with browser'
         )
 
     if driver_type:
@@ -285,7 +285,7 @@ class Login:
         )
         if not self.check_logged_in(session):
             raise Exception(
-                "Failed to log in. Likely outdated session file and cookies have expired. Delete the file and rerun the LinkedAccount() code"
+                "Failed to log in. Likely outdated session file and cookies have expired. Best practice to delete the file and rerun the LinkedAccount() code"
             )
         return session
 
@@ -296,9 +296,10 @@ class Login:
                 "https://www.linkedin.com/voyager/api/organization/companies?q=universalName&universalName=amazon"
             )
             if res.status_code != 200:
-                logger.error(f"{res.status_code} status code returned from linkeind")
+                logger.error(f"{res.status_code} status code returned from linkedin")
                 return False
-        except:
+        except Exception as e:
+            logger.error(f"Failed to get arbitrary company page: {e}")
             return False
         logger.info("Account successfully logged in - res code 200")
         return True

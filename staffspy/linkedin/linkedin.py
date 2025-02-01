@@ -114,7 +114,7 @@ class LinkedInScraper:
 
         if res.status_code not in (200, 404):
             raise Exception(
-                f"Failed to find company {company_name}",
+                f"Failed to find company {company_name} (likely due to outdated login if you know it's valid company)",
                 res.status_code,
                 res.text[:200],
             )

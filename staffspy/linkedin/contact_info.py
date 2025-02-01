@@ -1,6 +1,7 @@
 from calendar import month_name
 from datetime import datetime
 import json
+import requests
 import logging
 
 import pytz
@@ -18,7 +19,11 @@ class ContactInfoFetcher:
 
     def fetch_contact_info(self, base_staff):
         ep = self.endpoint.format(employee_id=base_staff.id)
-        res = self.session.get(ep)
+        try:
+            res = self.session.get(ep)
+        except requests.exceptions.TooManyRedirects as e:
+            logger.error("Too many redirects encountered: %s", e)
+            return None
         logger.debug(f"bio info, status code - {res.status_code}")
         if res.status_code == 429:
             return TooManyRequests("429 Too Many Requests")
