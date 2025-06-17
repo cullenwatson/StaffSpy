@@ -10,8 +10,6 @@
 - Export all your connections with their contact info
 - Aggregates the employees in a Pandas DataFrame
 
-[Video Guide for StaffSpy](https://youtu.be/DNFmjvpZBTs) - _updated for release v0.2.18_
-
 ### Installation
 
 ```
